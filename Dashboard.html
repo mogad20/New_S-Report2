@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غرفة العمليات | S-Report</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap'); 
+        
+        body { 
+            font-family: 'Cairo', sans-serif !important; 
+            background-color: #f4f7f6; /* لون خلفية أهدى وأريح للعين */
+        }
+        
+        /* 🎨 كروت الإحصائيات العصرية (Gradients & Hover Effects) */
+        .stat-card { 
+            border-radius: 20px; 
+            padding: 25px; 
+            color: white; 
+            border: none;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.15);
+        }
+        .stat-icon-bg {
+            position: absolute;
+            left: -15px;
+            bottom: -15px;
+            font-size: 6rem;
+            opacity: 0.15;
+            transform: rotate(-15deg);
+        }
+        .stat-value { font-size: 2.2rem; font-weight: 800; margin-top: 10px; }
+
+        /* تدرجات الألوان للكروت */
+        .bg-gradient-primary { background: linear-gradient(135deg, #4e54c8, #8f94fb); }
+        .bg-gradient-warning { background: linear-gradient(135deg, #f2994a, #f2c94c); color: #fff !important; }
+        .bg-gradient-info { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .bg-gradient-success { background: linear-gradient(135deg, #00b09b, #96c93d); }
+
+        /* 🗺️ الخريطة واللوحات */
+        .glass-panel {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 15px;
+        }
+        
+        #mapView { 
+            height: 500px; 
+            border-radius: 15px; 
+            z-index: 1; 
+        }
+
+        /* 📋 قائمة البلاغات الجانبية */
+        .reports-container {
+            height: 500px; /* نفس طول الخريطة */
+            display: flex;
+            flex-direction: column;
+        }
+        .table-responsive { 
+            flex-grow: 1;
+            overflow-y: auto; 
+            padding-right: 5px;
+        }
+
+        /* Scrollbar شيك للجدول */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+        .table th { background-color: #f8f9fa; border-bottom: 2px solid #eee; font-size: 0.9rem; }
+        .table td { font-size: 0.85rem; vertical-align: middle; }
+
+        /* الشاشة الجانبية (Offcanvas) */
+        .offcanvas-end { width: 450px !important; border-left: none; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
+        .details-img { max-height: 250px; object-fit: cover; border-radius: 12px; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* تابز (Tabs) شيك */
+        .nav-tabs .nav-link { border: none; font-weight: 600; color: #6c757d; padding: 10px 15px; border-radius: 10px 10px 0 0; }
+        .nav-tabs .nav-link.active { border-bottom: 3px solid #4e54c8; color: #4e54c8; background: transparent; }
+        /* 💡 أنيميشن البلاغ الجديد (Pulse) 💡 */
+@keyframes dangerPulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); transform: scale(1); }
+    50% { transform: scale(1.05); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); transform: scale(1); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); transform: scale(1); }
+}
+
+.badge-urgent {
+    animation: dangerPulse 1.5s infinite;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+.new-report-row {
+    background-color: #fff1f1 !important; /* لون أحمر خفيف جداً للسطر */
+    border-right: 5px solid #dc3545 !important; /* خط أحمر في أول السطر */
+    transition: all 0.5s ease;
+}
+    </style>
+</head>
+<body>
+
+    <div id="layout-container"></div>
+
+    <div class="container-fluid px-4 mb-5 mt-4 pt-3">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-dark"><i class="fa-solid fa-satellite-dish text-primary me-2 pulse-icon"></i> غرفة العمليات المركزية</h2>
+                <p class="text-muted mb-0">متابعة حية ومراقبة جغرافية للبلاغات</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button id="btnAnalytics" class="btn btn-dark shadow-sm rounded-pill px-4 d-none" onclick="openAnalyticsModal()">
+                    <i class="fa-solid fa-chart-pie text-warning me-1"></i> إحصائيات POWER BI
+                </button>
+            </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card bg-gradient-primary">
+                    <i class="fa-solid fa-file-shield stat-icon-bg"></i>
+                    <h6 class="mb-0 fw-bold">إجمالي البلاغات</h6>
+                    <div class="stat-value" id="countTotal">0</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card bg-gradient-warning">
+                    <i class="fa-solid fa-clock-rotate-left stat-icon-bg"></i>
+                    <h6 class="mb-0 fw-bold">قيد الانتظار</h6>
+                    <div class="stat-value" id="countPending">0</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card bg-gradient-info">
+                    <i class="fa-solid fa-person-digging stat-icon-bg"></i>
+                    <h6 class="mb-0 fw-bold">جاري العمل</h6>
+                    <div class="stat-value" id="countInProgress">0</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card bg-gradient-success">
+                    <i class="fa-solid fa-check-double stat-icon-bg"></i>
+                    <h6 class="mb-0 fw-bold">تم الحل بنجاح</h6>
+                    <div class="stat-value" id="countResolved">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-xl-8 col-lg-7">
+                <div class="glass-panel h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+                        <h5 class="fw-bold m-0"><i class="fa-solid fa-map-location-dot text-primary me-2"></i> الرادار الجغرافي</h5>
+                    </div>
+                    <div id="mapView"></div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-5">
+                <div class="glass-panel reports-container">
+                    
+                    <ul class="nav nav-tabs mb-3" id="reportsTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#activeReports"><i class="fa-solid fa-fire me-1"></i> نشطة الآن</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#archivedReports"><i class="fa-solid fa-box-archive me-1"></i> الأرشيف</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content flex-grow-1 d-flex flex-column overflow-hidden">
+                        
+                        <div class="tab-pane fade show active h-100" id="activeReports">
+                            <div class="table-responsive h-100">
+                                <table class="table table-hover align-middle mb-0 text-center">
+                                    <thead class="sticky-top">
+                                        <tr><th>رقم</th><th>النوع</th><th>التاريخ</th><th>الحالة</th><th>إجراء</th></tr>
+                                    </thead>
+                                    <tbody id="activeTableBody">
+                                        <tr><td colspan="4" class="py-5"><div class="spinner-border text-primary"></div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade h-100" id="archivedReports">
+                            <div class="table-responsive h-100">
+                                <table class="table table-hover align-middle mb-0 text-center">
+                                    <thead class="sticky-top">
+                                        <tr><th>رقم</th><th>النوع</th><th>التاريخ</th><th>الحالة</th><th>إجراء</th></tr>
+                                    </thead>
+                                    <tbody id="archiveTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="reportDetailsPanel">
+        <div class="offcanvas-header bg-white border-bottom shadow-sm">
+            <h5 class="offcanvas-title fw-bold text-dark" id="panelTitle"><i class="fa-solid fa-file-contract text-primary me-2"></i> تفاصيل البلاغ</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body bg-light" style="overflow-x: hidden;">
+            <div id="detailsSpinner" class="text-center py-5 d-none"><div class="spinner-border text-primary fa-2x"></div></div>
+            
+            <div id="detailsContent">
+                <div class="mb-4">
+                    <img id="reportImage" src="https://cdn-icons-png.flaticon.com/512/854/854878.png" class="details-img" alt="Report Image">
+                </div>
+                
+                <div class="card border-0 shadow-sm rounded-4 mb-3">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-primary border-bottom pb-2 mb-3"><i class="fa-solid fa-user-pen me-1"></i> بيانات المُبلغ</h6>
+                        <div id="reportUser" class="fw-bold text-dark fs-6">جاري التحميل...</div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-primary border-bottom pb-2 mb-3"><i class="fa-solid fa-align-right me-1"></i> وصف المواطن</h6>
+                        <p id="reportDesc" class="mb-0 text-secondary lh-lg"></p>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-dark mt-4 mb-3 ps-1"><i class="fa-solid fa-sliders text-danger me-1"></i> لوحة تحكم البلاغ</h6>
+                
+              <!-- 1. كارت الحالة (للموظف فقط) -->
+<div id="employee-only-status" class="card border-0 shadow-sm rounded-3 mb-2">
+    <div class="card-body p-2 d-flex gap-2">
+        <select id="actionStatus" class="form-select form-select-sm fw-bold border-0 bg-light">
+            <option value="Pending">قيد الانتظار</option>
+            <option value="InProgress">جاري العمل</option>
+            <option value="Resolved">تم الحل</option>
+            <option value="Closed">مغلق</option>
+        </select>
+        <button class="btn btn-sm btn-primary fw-bold px-3 rounded-3" onclick="updateStatus()"><i class="fa-solid fa-save"></i></button>
+    </div>
+</div>
+
+<!-- 2. كارت التوجيه لفريق (للموظف فقط) -->
+<div id="employee-only-team" class="card border-0 shadow-sm rounded-3 mb-2">
+    <div class="card-body p-2 d-flex gap-2">
+        <select id="actionTeam" class="form-select form-select-sm fw-bold border-0 bg-light">
+            <option value="">-- توجيه لفريق ميداني --</option>
+        </select>
+        <button class="btn btn-sm btn-success fw-bold px-3 rounded-3" onclick="assignTeam()"><i class="fa-solid fa-truck-fast"></i></button>
+    </div>
+</div>
+
+<!-- 3. كارت تصنيف البلاغ (يظهر للكل - عشان كدا مفيش فيه ID إخفاء) -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body p-2 d-flex gap-2">
+        <select id="actionCategory" class="form-select form-select-sm fw-bold border-0 bg-light">
+            <option value="">-- تغيير تصنيف البلاغ --</option>
+        </select>
+        <button class="btn btn-sm btn-warning fw-bold px-3 rounded-3" onclick="updateType()"><i class="fa-solid fa-tags"></i></button>
+    </div>
+</div>
+
+<!-- 4. زرار الإلغاء/الحظر (للأدمن فقط) -->
+<button id="employee-only-cancel" class="btn btn-outline-danger w-100 fw-bold shadow-sm rounded-3 py-2 mb-4" onclick="cancelReport()">
+    <i class="fa-solid fa-ban me-1"></i> إلغاء / رفض البلاغ
+</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="analyticsModal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="text-white fw-bold"><i class="fa-solid fa-chart-pie text-warning me-2"></i> لوحة القيادة الذكية (Power BI)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <iframe src="PowerBI/S-Report4.html" style="width:100%; height:100%; border:none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.4/signalr.min.js"></script>
+    
+    
+    
+    <script>
+        // التأكد من تسجيل الدخول
+        if (!localStorage.getItem('ApiToken')) {
+            window.location.href = 'index.html';
+        }
+        </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="Js/apiService.js"></script>
+    <script src="Js/layout.js"></script>
+    <script src="Js/SignalRService.js"></script>
+    <script src="Js/Dashboard.js"></script>
+</body>
+</html>

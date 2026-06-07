@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الموظفين | S-Report</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap'); 
+        body { font-family: 'Cairo', sans-serif !important; background-color: #f8f9fa; }
+        .table-responsive { border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4 mb-5">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-primary"><i class="fa-solid fa-user-tie me-2"></i> إدارة الموظفين</h2>
+                <p class="text-muted mb-0">إضافة وتعديل بيانات الموظفين وتوزيعهم على الفِرَق</p>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                <select id="filterCity" class="form-select shadow-sm fw-bold border-primary text-primary" onchange="filterByCity()" style="height: 38px;">
+                    <option value="">عرض كل المدن</option>
+                </select>
+                
+                <span class="badge bg-white text-dark border shadow-sm d-flex align-items-center px-3" style="height: 38px;">
+                    <i class="fa-solid fa-users me-2 text-primary"></i> العدد: <span id="empCount">0</span>
+                </span>
+                <button onclick="openEmployeeModal(0)" class="btn btn-primary shadow-sm rounded-pill px-4" style="height: 38px; white-space: nowrap;">
+                    <i class="fa-solid fa-plus me-1"></i> تسجيل موظف
+                </button>
+                <a href="dashboard.html" class="btn btn-dark shadow-sm rounded-pill px-4" style="height: 38px; display: flex; align-items: center; white-space: nowrap;">
+                    <i class="fa-solid fa-chart-line me-1"></i> غرفة العمليات
+                </a>
+            </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th class="ps-4">الموظف</th>
+                                <th>الرقم القومي</th>
+                                <th>التواصل</th>
+                                <th>المدينة / الفريق</th>
+                                <th class="text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeesTableBody">
+                            <tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="employeeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="modalTitle"><i class="fa-solid fa-id-card me-2"></i> بيانات الموظف</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <form id="employeeForm">
+                        <input type="hidden" id="empId">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">الاسم الأول</label>
+                                <input type="text" id="firstName" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">الاسم الثاني</label>
+                                <input type="text" id="secondName" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">الرقم القومي</label>
+                                <input type="text" id="nationalId" class="form-control" required maxlength="14">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">تاريخ الميلاد</label>
+                                <input type="date" id="birthdate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">النوع</label>
+                                <select id="gender" class="form-select" required>
+                                    <option value="Male">ذكر</option>
+                                    <option value="Female">أنثى</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">رقم الهاتف</label>
+                                <input type="text" id="phone" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">العنوان</label>
+                                <input type="text" id="address" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">البريد الإلكتروني</label>
+                                <input type="email" id="email" class="form-control" required>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-primary">المدينة</label>
+                                <select id="cityId" class="form-select border-primary" required></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-success">الفريق (اختياري)</label>
+                                <select id="teamId" class="form-select border-success"></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-danger">الراتب</label>
+                                <input type="number" id="salary" class="form-control border-danger" required>
+                            </div>
+
+                            <div class="col-md-6" id="passwordContainer">
+                                <label class="form-label fw-bold text-warning">كلمة المرور (مطلوبة للتسجيل)</label>
+                                <input type="password" id="password" class="form-control border-warning">
+                            </div>
+
+                            <div class="col-md-6 d-none" id="roleContainer">
+                                <label class="form-label fw-bold text-info">صلاحية النظام (Role)</label>
+                                <select id="roleId" class="form-select border-info">
+                                    <option value="1">مدير نظام (Admin)</option>
+                                    <option value="2">موظف (Employee)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top text-end">
+                            <button type="button" class="btn btn-secondary px-4 me-2" data-bs-dismiss="modal">إلغاء</button>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold" id="saveEmpBtn">حفظ البيانات</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="Js/apiService.js"></script>
+    <script src="Js/Employees.js"></script>
+</body>
+</html>

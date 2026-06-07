@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الفِرَق الميدانية | S-Report</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap'); 
+        body { font-family: 'Cairo', sans-serif !important; background-color: #f8f9fa; }
+        .table-responsive { border-radius: 10px; }
+        .action-icon { cursor: pointer; transition: 0.2s; }
+        .action-icon:hover { transform: scale(1.1); }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4 mb-5">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-success"><i class="fa-solid fa-truck-medical me-2"></i> إدارة الفِرَق الميدانية</h2>
+                <p class="text-muted mb-0">متابعة الفِرَق، تغيير حالاتهم، وربط الكوادر</p>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge bg-white text-dark border shadow-sm d-flex align-items-center px-3">
+                    <i class="fa-solid fa-users-gear me-2 text-success"></i> العدد: <span id="teamsCount">0</span>
+                </span>
+                <button onclick="openTeamModal()" class="btn btn-success shadow-sm rounded-pill px-4">
+                    <i class="fa-solid fa-plus me-1"></i> إضافة فريق جديد
+                </button>
+                <a href="dashboard.html" class="btn btn-dark shadow-sm rounded-pill px-4" style="height: 38px; display: flex; align-items: center; white-space: nowrap;">
+                    <i class="fa-solid fa-chart-line me-1"></i> غرفة العمليات
+                </a>
+            </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="bg-success text-white">
+                            <tr>
+                                <th class="ps-4">م</th>
+                                <th>اسم الفريق</th>
+                                <th>المدينة</th>
+                                <th class="text-center">حالة الفريق</th>
+                                <th class="text-center">إجراءات الإدارة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamsTableBody">
+                            <tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-success"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="teamModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold" id="teamModalTitle">إضافة فريق جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="teamForm">
+                        <input type="hidden" id="teamId">
+                        <input type="hidden" id="teamState"> <div class="mb-3">
+                            <label class="form-label fw-bold">اسم الفريق</label>
+                            <input type="text" id="teamName" class="form-control" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">المدينة التابع لها</label>
+                            <select id="teamCity" class="form-select" required>
+                                <option value="">-- جاري تحميل المدن --</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 fw-bold" id="saveTeamBtn">حفظ الفريق</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="assignModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-plus me-2"></i> ربط موظف بالفريق</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="assignForm">
+                        <p class="text-muted fw-bold mb-3">الفريق: <span id="assignTeamName" class="text-primary"></span></p>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">اختر الموظف</label>
+                            <select id="assignEmployeeId" class="form-select" required>
+                                <option value="">-- جاري تحميل الموظفين --</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold" id="saveAssignBtn">تنفيذ الربط</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="stateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-traffic-light me-2"></i> تحديث الحالة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <select id="newState" class="form-select mb-4 fw-bold">
+                        <option value="Available">🟢 متاح (Available)</option>
+                        <option value="Busy">🔴 مشغول (Busy)</option>
+                        <option value="Blocked">⚫ محظور (Blocked)</option>
+                    </select>
+                    <button onclick="changeTeamState()" class="btn btn-warning w-100 fw-bold">حفظ الحالة</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="Js/apiService.js"></script>
+    <script src="Js/Teams.js"></script>
+</body>
+</html>

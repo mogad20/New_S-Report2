@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <title>إرسال إشعار لمواطن | S-Report</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap'); 
+        body{ font-family: 'Cairo', sans-serif !important;}
+        .select2-container--default[dir="rtl"] .select2-selection--single { height: 55px; border: 1px solid #dee2e6; border-radius: 0.5rem; display: flex; align-items: center; padding-right: 12px; }
+    </style>
+</head>
+<body>
+
+    <div id="layout-container"></div>
+
+    <div class="container mt-5 pt-4">
+        <h2 class="text-primary fw-bold mb-4"><i class="fas fa-paper-plane me-2"></i> إرسال إشعار لمواطن</h2>
+        
+        <form id="notificationForm" class="card p-4 shadow-sm border-0 rounded-3">
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">اختر المواطن (المُبلغ)</label>
+                <div class="form-group">
+                    <select id="userSelect" class="form-select" style="width: 100%;" required>
+                        <option value="">جاري تحميل المبلّغين...</option>
+                    </select>
+                    <input type="hidden" id="userIdInput">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">عنوان الإشعار</label>
+                <input type="text" id="title" class="form-control" placeholder="اكتب عنوان الإشعار..." required>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">محتوى الإشعار</label>
+                <textarea id="body" class="form-control" rows="5" placeholder="اكتب تفاصيل الإشعار للمواطن..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow">
+                <i class="fas fa-paper-plane me-2"></i> إرسال الإشعار الآن
+            </button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="Js/apiService.js"></script>
+    <script src="Js/Layout.js"></script>
+    <script src="Js/SendToUser.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <title>كل إشعارات النظام | S-Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <div id="layout-container"></div>
+
+    <div class="container-fluid mt-5 pt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-danger fw-bold"><i class="fas fa-globe me-2"></i> كل إشعارات النظام</h2>
+        </div>
+
+        <div id="loadingMessage" class="alert alert-info">⏳ جاري تحميل الإشعارات...</div>
+
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="py-3 px-4">التاريخ</th>
+                                <th class="py-3">العنوان</th>
+                                <th class="py-3">محتوى الرسالة</th>
+                                <th class="py-3 px-4">المدن المستهدفة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="notificationsTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="Js/apiService.js"></script>
+    <script src="Js/Layout.js"></script>
+    <script src="Js/AllNotification.js"></script>
+</body>
+</html>

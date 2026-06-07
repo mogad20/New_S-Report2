@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قائمة المواطنين | S-Report</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap'); 
+        body {
+            font-family: 'Cairo', sans-serif !important;
+            background-color: #f8f9fa;
+        }
+        .table-responsive {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4 mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-primary"><i class="fa-solid fa-users-viewfinder me-2"></i> سجل مواطنين النظام</h2>
+                <p class="text-muted mb-0">إدارة بيانات جميع المستخدمين المسجلين في كافة المدن</p>
+            </div>
+
+            <div class="d-flex gap-2">
+                <span class="badge bg-white text-dark border shadow-sm d-flex align-items-center px-3">
+                    <i class="fa-solid fa-user-tag me-2 text-primary"></i> العدد: <span id="citizensCount">0</span>
+                </span>
+                <a href="Dashboard.html" class="btn btn-dark shadow-sm rounded-pill px-4">
+                    <i class="fa-solid fa-chart-line me-1"></i> غرفة العمليات
+                </a>
+            </div>
+        </div>
+
+        <div id="errorAlert" class="alert alert-danger border-2 shadow-sm fw-bold d-none">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> <span id="errorMessage"></span>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th class="ps-4">المواطن</th>
+                                <th>الرقم القومي</th>
+                                <th>التواصل</th>
+                                <th>العنوان</th>
+                                <th class="text-center">الحالة</th>
+                                <th class="text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="citizensTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <h5 class="mt-2">جاري تحميل البيانات...</h5>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="citizenDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-id-card me-2"></i> تفاصيل وإدارة المواطن</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center mx-auto mb-2 fw-bold"
+                             style="width: 70px; height: 70px; border: 3px solid; font-size: 24px;" id="modalUserAvatar">
+                            م
+                        </div>
+                        <h4 class="fw-bold mb-0" id="modalUserName">اسم المواطن</h4>
+                        <span class="badge bg-secondary mt-2" id="modalUserStatus">مواطن</span>
+                    </div>
+
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted"><i class="fa-solid fa-envelope me-2"></i> الإيميل:</span>
+                            <span class="fw-bold text-dark" id="modalUserEmail">---</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted"><i class="fa-regular fa-id-badge me-2"></i> الرقم القومي:</span>
+                            <span class="fw-bold text-dark" id="modalUserNationalId">---</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted"><i class="fa-solid fa-phone me-2"></i> الهاتف:</span>
+                            <span class="fw-bold text-dark" id="modalUserPhone">---</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted"><i class="fa-solid fa-location-dot me-2"></i> العنوان:</span>
+                            <span class="fw-bold text-dark" id="modalUserAddress">---</span>
+                        </li>
+                    </ul>
+
+                    <div id="adminActionsSection" class="d-none">
+    <h6 class="fw-bold text-danger mb-3 border-bottom pb-2">إجراءات الإدارة</h6>
+    <div class="d-flex gap-2">
+        <button id="blockBtn" class="btn btn-outline-danger w-100 fw-bold shadow-sm py-2">
+            <i class="fa-solid fa-ban me-1"></i> حظر المواطن
+        </button>
+    </div>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="Js/apiService.js"></script>
+    <script src="Js/Citizens.js"></script>
+</body>
+</html>
