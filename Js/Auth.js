@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("خطأ في قراءة التوكن:", e);
         }
         // المسار الافتراضي لأي موظف عادي أو أدمن
-        return 'dashboard.html'; 
+        return 'Dashboard.html'; 
     }
 
     // لو اليوزر أصلاً معاه توكن (يعني عامل لوجين قبل كده)، نحوله بذكاء فوراً للصفحة بتاعته
