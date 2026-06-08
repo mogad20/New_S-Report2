@@ -48,32 +48,43 @@ document.addEventListener('DOMContentLoaded', () => {
         loginBtn.innerHTML = '⏳ جاري تسجيل الدخول...';
         errorMessage.style.display = 'none';
 
-        // 💡 نستخدم المحرك بتاعنا اللي عملناه في apiService.js
-        const response = await apiRequest('/Auth/Login', 'POST', { email, password });
+        // ضفنا الـ try والـ catch هنا بناءً على طلبك
+        try {
+            // 💡 نستخدم المحرك بتاعنا اللي عملناه في apiService.js
+            const response = await apiRequest('/Auth/Login', 'POST', { email, password });
 
-        if (response.ok && response.data.token) {
-            // اللوجين نجح!
-            
-            // 1. نتأكد إنه أدمن أو موظف
-            const role = response.data.role;
-            if (role === 'Citizen' || !role) {
-                showError('عذراً، هذه البوابة مخصصة للموظفين والإداريين فقط.');
+            if (response.ok && response.data.token) {
+                // اللوجين نجح!
+                
+                // 1. نتأكد إنه أدمن أو موظف
+                const role = response.data.role;
+                if (role === 'Citizen' || !role) {
+                    showError('عذراً، هذه البوابة مخصصة للموظفين والإداريين فقط.');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'تسجيل الدخول';
+                    return;
+                }
+
+                // 2. نخزن التوكن في الخزنة (localStorage)
+                localStorage.setItem('ApiToken', response.data.token);
+                
+                // بنخزن الـ Role أوتوماتيك أول ما يدخل
+                localStorage.setItem('userRole', role);
+                
+                // 3. 🚀 التوجيه الذكي للصفحة المناسبة حسب الفريق
+                window.location.href = getRedirectUrl(response.data.token);
+            } else {
+                // اللوجين فشل (إيميل أو باسورد غلط)
+                showError('❌ خطأ في البريد الإلكتروني أو كلمة المرور');
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = 'تسجيل الدخول';
-                return;
             }
-
-            // 2. نخزن التوكن في الخزنة (localStorage)
-            localStorage.setItem('ApiToken', response.data.token);
+        } catch (error) {
+            // لو حصل أي Error في الاتصال أو من السيرفر، هيمسكه ويثبته على الشاشة
+            console.error("خطأ تم التقاطه بواسطة الـ Catch:", error);
+            showError(`❌ حدث خطأ: ${error.message || 'لا يمكن الاتصال بالسيرفر'}`);
             
-            // بنخزن الـ Role أوتوماتيك أول ما يدخل
-            localStorage.setItem('userRole', role);
-            
-            // 3. 🚀 التوجيه الذكي للصفحة المناسبة حسب الفريق
-            window.location.href = getRedirectUrl(response.data.token);
-        } else {
-            // اللوجين فشل (إيميل أو باسورد غلط)
-            showError('❌ خطأ في البريد الإلكتروني أو كلمة المرور');
+            // نرجع الزرار يشتغل تاني عشان تعرف تدوس عليه
             loginBtn.disabled = false;
             loginBtn.innerHTML = 'تسجيل الدخول';
         }
