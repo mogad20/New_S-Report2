@@ -9,6 +9,8 @@ let markersLayer = new L.LayerGroup();
 let currentSelectedReportId = 0;
 let isAdmin = false;
 
+let currentPageNum = 1; // 💡 متغير لمعرفة رقم الصفحة الحالية
+
 // تهيئة الخريطة
 function initMap() {
     map = L.map('mapView').setView([26.5569, 31.6947], 8);
@@ -29,10 +31,10 @@ function checkRoleAndLoad() {
     }
     
     // 💡 التعديل هنا: حطينا كل المسميات (PageSize, pageSize, size) عشان الباك إند يلقطها غصب عنه
-    // وخلينا الرقم 10000 عشان يجيب كل البلاغات وميوقفش عند 10
+   // 💡 اللينك بقى ديناميك بياخد رقم الصفحة من المتغير
     const endpoint = isAdmin 
-        ? 'Report/All?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false' 
-        : 'Report/CityReports?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false';
+        ? `Report/All?PageNumber=${currentPageNum}&pageSize=10&excludeResolved=false` 
+        : `Report/CityReports?PageNumber=${currentPageNum}&pageSize=10&excludeResolved=false`;
         
     fetchReports(endpoint); 
 }
@@ -506,4 +508,10 @@ function showAlert(msg, type) {
             ${msg} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>`;
     setTimeout(() => { container.innerHTML = ''; }, 4000);
+}
+
+// 💡 دالة زرار التالي
+function loadNextPage() {
+    currentPageNum++; // زوّد رقم الصفحة 1
+    checkRoleAndLoad(); // اطلب الداتا الجديدة من السيرفر
 }
