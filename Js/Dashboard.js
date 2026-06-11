@@ -274,22 +274,23 @@ async function openReportDetails(id) {
                 </div>
             `;
 
-            // 💡 3. حل مشكلة الصورة
+            // 💡 3. حل مشكلة الصورة (الكود الكامل)
             const imgs = details.attachedMedia || details.AttachedMedia;
             if (imgs && imgs.length > 0) {
-                // ... (كودك القديم بتاع الصورة) ...
+                let imgPath = imgs[0].fileURL || imgs[0].FileURL; 
+                if (imgPath && !imgPath.startsWith('http')) {
+                    imgPath = `https://abdallahnasrat-001-site1.anytempurl.com/${imgPath}`; 
+                }
                 document.getElementById('reportImage').src = imgPath; 
             } else {
                 document.getElementById('reportImage').src = "https://cdn-icons-png.flaticon.com/512/854/854878.png"; 
             }
 
-            // 💡 إضافة: فحص وعرض الصوت
+            // 💡 4. فحص وعرض الصوت
             const audioContainer = document.getElementById('reportAudioContainer');
-            // تأكد إن الخاصية دي (audioUrl أو VoiceRecord) هي نفس اسم الخاصية اللي الـ API بيرجعها
             let audioPath = details.audioUrl || details.AudioUrl || details.voiceRecord || details.VoiceRecord; 
             
             if (audioPath && audioPath !== "") {
-                // لو المسار مش بيبدأ بـ http، بنركب عليه الدومين زي ما عملنا في الصورة
                 if (!audioPath.startsWith('http')) {
                     audioPath = `https://abdallahnasrat-001-site1.anytempurl.com/${audioPath}`;
                 }
@@ -308,7 +309,7 @@ async function openReportDetails(id) {
                 `;
             }
 
-            // 4. تحديد الحالة للقائمة المنسدلة (فقط لو الموظف هو من يفتح، لأن الأدمن مش هيشوفها أصلاً)
+            // 5. تحديد الحالة للقائمة المنسدلة
             if (!isAdmin) {
                 const state = details.reportState !== undefined ? details.reportState : details.ReportState;
                 const strCheck = String(state).toLowerCase().trim();
@@ -329,9 +330,12 @@ async function openReportDetails(id) {
             showAlert('فشل جلب تفاصيل البلاغ', 'danger');
             panel.hide();
         }
-    } catch(e) { showAlert('خطأ في الاتصال', 'danger'); panel.hide(); }
+    } catch(e) {
+        console.error("Error loading report details:", e); // هيطبعلك الإيرور الحقيقي لو في حاجة تانية
+        showAlert('خطأ في الاتصال', 'danger');
+        panel.hide();
+    }
 }
-
 // ------------------------------------------------------------------
 // الأكشنز (تحديث البلاغ)
 // ------------------------------------------------------------------
