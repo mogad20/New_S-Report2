@@ -28,11 +28,11 @@ function checkRoleAndLoad() {
         document.getElementById('btnAnalytics').classList.remove('d-none');
     }
     
-    // 💡 التعديل هنا: زي المواطنين بالظبط! لو أدمن نجيب All، لو موظف نجيب CityReports
-    // 💡 وضفنا page=1&size=1000 عشان يجيب كل البلاغات ميخفيش حاجة
+    // 💡 التعديل هنا: حطينا كل المسميات (PageSize, pageSize, size) عشان الباك إند يلقطها غصب عنه
+    // وخلينا الرقم 10000 عشان يجيب كل البلاغات وميوقفش عند 10
     const endpoint = isAdmin 
-        ? 'Report/All?page=1&size=1000&excludeResolved=false' 
-        : 'Report/CityReports?page=1&size=1000&excludeResolved=false';
+        ? 'Report/All?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false' 
+        : 'Report/CityReports?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false';
         
     fetchReports(endpoint); 
 }
