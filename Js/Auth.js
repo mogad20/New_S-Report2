@@ -56,13 +56,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok && response.data.token) {
                 // اللوجين نجح!
                 
-                // 1. نتأكد إنه أدمن أو موظف
-                const role = response.data.role;
-                if (role === 'Citizen' || !role) {
-                    showError('عذراً، هذه البوابة مخصصة للموظفين والإداريين فقط.');
+                // 1. استخراج الصلاحية (Role) بطريقة قوية
+                let role = response.data.role;
+                
+                // لو الباك إند مش بيبعت الـ role صراحة، هنفكه من التوكن
+                if (!role) {
+                    try {
+                        const base64Url = response.data.token.split('.')[1];
+                        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                        }).join(''));
+                        const userData = JSON.parse(jsonPayload);
+                        // مفاتيح الـ Role الشهيرة في بيئة .NET
+                        role = userData['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || userData.role || userData.Role || '';
+                    } catch(e) { console.error("Error decoding token for role", e); }
+                }
+
+                // توحيد حالة الحروف عشان نتجنب المشاكل (citizen, Citizen, User)
+                let safeRole = (role || '').toString().toLowerCase();
+
+                // 🛑 المنع الصارم للمواطنين
+                if (safeRole === 'citizen' || safeRole === 'user' || safeRole === 'مواطن' || safeRole === '') {
+                    showError('تسجيل الدخول خاص للكوادر والموظفين.');
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = 'تسجيل الدخول';
-                    return;
+                    return; // نوقف الكود هنا والـ Redirect مش هيشتغل
                 }
 
                 // 2. نخزن التوكن في الخزنة (localStorage)
