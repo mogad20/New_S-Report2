@@ -414,19 +414,35 @@ async function updateType() {
 }
 
 // 4. إلغاء البلاغ نهائياً
+// 4. إلغاء البلاغ نهائياً
 async function cancelReport() {
-    // 💡 حماية إضافية: لو اللي داخل موظف ومحاول ينفذها، نوقفه
-    if(!confirm('هل أنت متأكد من إلغاء البلاغ نهائياً؟')) return;
+    if(!confirm('هل أنت متأكد من إلغاء/رفض البلاغ نهائياً؟')) return;
     
     try {
-       const res = await apiRequest(`Report/${currentSelectedReportId}/cancel`, 'PUT');
+        // 💡 التعديل السحري: بما إن الإلغاء هو "إغلاق"، هنبعت نفس الريكويست بتاع تغيير الحالة لـ Closed (3)
+        const payload = { 
+            status: 3, 
+            Status: 3,
+            reportState: 3,
+            ReportState: 3
+        };
+        
+        console.log("جارِ إرسال أمر الإغلاق/الإلغاء للسيرفر...");
+
+        // استخدمنا مسار تغيير الحالة (PATCH) اللي شغال ومضمون 100% بدل مسار الـ cancel
+        const res = await apiRequest(`Report/${currentSelectedReportId}/status`, 'PATCH', payload);
+        
         if(res.ok) { 
-            showAlert('تم الإلغاء!', 'success'); 
+            showAlert('تم إلغاء البلاغ وإغلاقه بنجاح!', 'success'); 
             bootstrap.Offcanvas.getInstance(document.getElementById('reportDetailsPanel')).hide();
-            checkRoleAndLoad(); 
+            checkRoleAndLoad(); // ريفريش الجدول
         } 
-        else showAlert('فشل الإلغاء! (تأكد من صلاحياتك)', 'danger');
-    } catch(e) { showAlert('خطأ', 'danger'); }
+        else {
+            showAlert('فشل الإلغاء! (تأكد أن البلاغ ليس مغلقاً بالفعل)', 'danger');
+        }
+    } catch(e) { 
+        showAlert('خطأ في الاتصال بالسيرفر', 'danger'); 
+    }
 }
 // ------------------------------------------------------------------
 // جلب القوائم المساعدة
