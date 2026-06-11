@@ -286,29 +286,39 @@ async function openReportDetails(id) {
                 document.getElementById('reportImage').src = "https://cdn-icons-png.flaticon.com/512/854/854878.png"; 
             }
 
-            // 💡 4. فحص وعرض الصوت
-            const audioContainer = document.getElementById('reportAudioContainer');
-            let audioPath = details.audioUrl || details.AudioUrl || details.voiceRecord || details.VoiceRecord; 
-            
-            if (audioPath && audioPath !== "") {
-                if (!audioPath.startsWith('http')) {
-                    audioPath = `https://abdallahnasrat-001-site1.anytempurl.com/${audioPath}`;
+            // 💡 التعديل المباشر لاستخراج وعرض الصوت من مصفوفة attachedMedia
+    const audioContainer = document.getElementById('reportAudioContainer');
+    
+    // رسالة افتراضية في حالة عدم وجود صوت
+    audioContainer.innerHTML = `
+        <p class="text-muted small mb-0 fw-bold">
+            <i class="fa-solid fa-microphone-slash me-2 text-secondary"></i> لا يوجد تسجيل صوتي مرفق
+        </p>
+    `;
+
+    const mediaItems = details.attachedMedia || details.AttachedMedia;
+    if (mediaItems && mediaItems.length > 0) {
+        mediaItems.forEach(item => {
+            let fileUrl = item.fileURL || item.FileURL;
+            let mediaType = item.mediaType || item.MediaType || "";
+
+            // التحقق إذا كان العنصر الحالي هو ملف صوتي
+            if (mediaType.toLowerCase() === 'audio' && fileUrl) {
+                if (!fileUrl.startsWith('http')) {
+                    fileUrl = `https://abdallahnasrat-001-site1.anytempurl.com/${fileUrl}`;
                 }
                 audioContainer.innerHTML = `
                     <audio controls class="w-100" style="height: 40px; outline: none;">
-                        <source src="${audioPath}" type="audio/mpeg">
-                        <source src="${audioPath}" type="audio/wav">
+                        <source src="${fileUrl}" type="audio/mpeg">
+                        <source src="${fileUrl}" type="audio/mp4">
+                        <source src="${fileUrl}" type="audio/x-m4a">
+                        <source src="${fileUrl}" type="audio/wav">
                         متصفحك لا يدعم تشغيل الصوت.
                     </audio>
                 `;
-            } else {
-                audioContainer.innerHTML = `
-                    <p class="text-muted small mb-0 fw-bold">
-                        <i class="fa-solid fa-microphone-slash me-2 text-secondary"></i> لا يوجد تسجيل صوتي مرفق
-                    </p>
-                `;
             }
-
+        });
+    }
             // 5. تحديد الحالة للقائمة المنسدلة
             if (!isAdmin) {
                 const state = details.reportState !== undefined ? details.reportState : details.ReportState;
