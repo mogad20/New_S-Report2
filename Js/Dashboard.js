@@ -419,7 +419,7 @@ async function cancelReport() {
     if(!confirm('هل أنت متأكد من إلغاء البلاغ نهائياً؟')) return;
     
     try {
-        const res = await apiRequest(`Report/${currentSelectedReportId}/cancel`, 'PUT', {});
+       const res = await apiRequest(`Report/${currentSelectedReportId}/cancel`, 'PUT');
         if(res.ok) { 
             showAlert('تم الإلغاء!', 'success'); 
             bootstrap.Offcanvas.getInstance(document.getElementById('reportDetailsPanel')).hide();
