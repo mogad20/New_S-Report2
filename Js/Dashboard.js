@@ -30,9 +30,7 @@ function checkRoleAndLoad() {
     
     // 💡 التعديل هنا: حطينا كل المسميات (PageSize, pageSize, size) عشان الباك إند يلقطها غصب عنه
     // وخلينا الرقم 10000 عشان يجيب كل البلاغات وميوقفش عند 10
-    const endpoint = isAdmin 
-        ? 'Report/All?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false' 
-        : 'Report/CityReports?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false';
+    const endpoint = isAdmin ? 'Report/All' : 'Report/CityReports';
         
     fetchReports(endpoint); 
 }
@@ -41,11 +39,32 @@ function checkRoleAndLoad() {
 // جلب البلاغات من السيرفر (مع فلترة ذكية للتكرار)
 async function fetchReports(endpoint) {
     try {
-        const noCacheUrl = endpoint.includes('?') ? `${endpoint}&t=${new Date().getTime()}` : `${endpoint}?t=${new Date().getTime()}`;
-        const response = await apiRequest(noCacheUrl, 'GET');
-        
-        if (response && response.ok) {
-            let reports = response.data.$values || response.data;
+        let allReports = [];
+        let currentPage = 1;
+        let hasMoreData = true;
+
+        // اللوب اللي هيشفط الداتا كلها
+        while (hasMoreData) {
+            const url = `${endpoint}?PageNumber=${currentPage}&pageSize=10&excludeResolved=false&t=${new Date().getTime()}`;
+            const response = await apiRequest(url, 'GET');
+            
+            if (response && response.ok) {
+                let currentBatch = response.data.$values || response.data;
+                if (currentBatch && currentBatch.length > 0) {
+                    allReports = allReports.concat(currentBatch);
+                    currentPage++;
+                    if (currentBatch.length < 10) hasMoreData = false;
+                } else {
+                    hasMoreData = false;
+                }
+            } else {
+                hasMoreData = false;
+            }
+        }
+
+        // ربطنا الداتا اللي اتجمعت بالمتغير القديم بتاعك
+        if (allReports.length >= 0) {
+            let reports = allReports;
             
             // 💡 الحل الذكي: تصفية التكرار والاحتفاظ بـ "النسخة الأحدث" فقط
             let uniqueMap = new Map();
