@@ -19,7 +19,7 @@ function initMap() {
 }
 
 // فحص الصلاحيات وتحديد المسار
-// فحص الصلاحيات وتحديد المسار
+// فحص الصلاحيات وتحديد المسار (رجعناه نضيف عشان هنركب عليه اللوب)
 function checkRoleAndLoad() {
     const role = localStorage.getItem('userRole') || 'Employee'; 
     isAdmin = (role === 'Admin');
@@ -28,68 +28,80 @@ function checkRoleAndLoad() {
         document.getElementById('btnAnalytics').classList.remove('d-none');
     }
     
-    // 💡 التعديل هنا: حطينا كل المسميات (PageSize, pageSize, size) عشان الباك إند يلقطها غصب عنه
-    // وخلينا الرقم 10000 عشان يجيب كل البلاغات وميوقفش عند 10
-    const endpoint = isAdmin 
-        ? 'Report/All?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false' 
-        : 'Report/CityReports?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false';
+    // شيلنا الدوشة اللي هنا وهنخلي اللوب هو اللي يتعامل
+    const endpoint = isAdmin ? 'Report/All' : 'Report/CityReports';
         
     fetchReports(endpoint); 
 }
 
-// جلب البلاغات من السيرفر
-// جلب البلاغات من السيرفر (مع فلترة ذكية للتكرار)
-async function fetchReports(endpoint) {
+// جلب البلاغات من السيرفر (بنظام اللوب / الشفاط)
+async function fetchReports(baseEndpoint) {
     try {
-        const noCacheUrl = endpoint.includes('?') ? `${endpoint}&t=${new Date().getTime()}` : `${endpoint}?t=${new Date().getTime()}`;
-        const response = await apiRequest(noCacheUrl, 'GET');
-        
-        if (response && response.ok) {
-            let reports = response.data.$values || response.data;
-            
-            // 💡 الحل الذكي: تصفية التكرار والاحتفاظ بـ "النسخة الأحدث" فقط
-            let uniqueMap = new Map();
+        let allReports = [];
+        let currentPage = 1;
+        let hasMoreData = true;
 
-            reports.forEach(r => {
-                const id = r.reportId || r.ReportId || r.id || r.Id;
+        // 💡 اللوب السحري: هيفضل يلف يسحب صفحات لحد ما الداتا تخلص
+        while (hasMoreData) {
+            // بنركب اللينك برقم الصفحة الحالي وبنطلب 10 بـ 10 عشان السيرفر ميزعلش
+            const url = `${baseEndpoint}?PageNumber=${currentPage}&pageSize=10&excludeResolved=false&t=${new Date().getTime()}`;
+            
+            const response = await apiRequest(url, 'GET');
+            
+            if (response && response.ok) {
+                let reports = response.data.$values || response.data;
                 
-                if (!uniqueMap.has(id)) {
-                    uniqueMap.set(id, r);
-                } else {
-                    // لو الـ ID متكرر، هنقارن الحالة عشان نعرف مين النسخة الأحدث
-                    const existing = uniqueMap.get(id);
+                if (reports && reports.length > 0) {
+                    allReports = allReports.concat(reports); // بنلزق البلاغات الجديدة في القديمة
+                    currentPage++; // زود رقم الصفحة عشان اللفة الجاية
                     
-                    // دالة بتدي "وزن" للحالة (الأكبر هو الأحدث)
-                    const getWeight = (obj) => {
-                        const s = String(obj.reportState || obj.ReportState || obj.state || obj.State || obj.status || obj.Status).toLowerCase().trim();
-                        if (s === "3" || s === "closed") return 3;
-                        if (s === "2" || s === "resolved") return 2;
-                        if (s === "1" || s === "inprogress") return 1;
-                        return 0; // pending أو غيره
-                    };
-
-                    const weightNew = getWeight(r);
-                    const weightOld = getWeight(existing);
-
-                    // لو النسخة الجديدة حالتها متقدمة، تمسح القديمة وتكسب
-                    if (weightNew > weightOld) {
-                        uniqueMap.set(id, r);
-                    } 
-                    // لو نفس الحالة (زي إنك غيرت التصنيف بس)، بنخلي آخر نسخة تيجي من السيرفر تمسح القديمة
-                    else if (weightNew === weightOld) {
-                        uniqueMap.set(id, r);
+                    // لو السيرفر رجع أقل من 10، ده معناه إن دي آخر صفحة (الخزان فضي)
+                    if (reports.length < 10) {
+                        hasMoreData = false;
                     }
+                } else {
+                    hasMoreData = false; // رجع مصفوفة فاضية يبقى خلصنا
                 }
-            });
-
-            // نحول الـ Map لمصفوفة نظيفة مفهاش تكرار ونبعتها للجدول
-            let finalReports = Array.from(uniqueMap.values());
-            distributeReports(finalReports);
-            
-        } else {
-            showAlert('فشل جلب البلاغات من السيرفر', 'danger');
+            } else {
+                hasMoreData = false; // لو حصل إيرور نوقف اللوب
+                if (currentPage === 1) showAlert('فشل جلب البلاغات من السيرفر', 'danger');
+            }
         }
+
+        // 💡 الحل الذكي: تصفية التكرار والاحتفاظ بالنسخة الأحدث (تطبق على كل البلاغات اللي لميناها)
+        let uniqueMap = new Map();
+
+        allReports.forEach(r => {
+            const id = r.reportId || r.ReportId || r.id || r.Id;
+            
+            if (!uniqueMap.has(id)) {
+                uniqueMap.set(id, r);
+            } else {
+                const existing = uniqueMap.get(id);
+                
+                const getWeight = (obj) => {
+                    const s = String(obj.reportState || obj.ReportState || obj.state || obj.State || obj.status || obj.Status).toLowerCase().trim();
+                    if (s === "3" || s === "closed") return 3;
+                    if (s === "2" || s === "resolved") return 2;
+                    if (s === "1" || s === "inprogress") return 1;
+                    return 0; 
+                };
+
+                const weightNew = getWeight(r);
+                const weightOld = getWeight(existing);
+
+                if (weightNew >= weightOld) {
+                    uniqueMap.set(id, r);
+                } 
+            }
+        });
+
+        // نحول الـ Map لمصفوفة نظيفة ونبعتها للجدول
+        let finalReports = Array.from(uniqueMap.values());
+        distributeReports(finalReports); // الدالة دي هتعرض كل الـ 29 بلاغ مرة واحدة!
+        
     } catch (e) {
+        console.error("Fetch Loop Error:", e);
         showAlert('تعذر الاتصال بالسيرفر', 'danger');
     }
 }
