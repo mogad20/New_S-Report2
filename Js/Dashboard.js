@@ -230,18 +230,17 @@ async function openReportDetails(id) {
     const teamControl = document.getElementById('employee-only-team');     // الفريق
     const cancelBtn = document.getElementById('employee-only-cancel');     // الإلغاء / الحظر
     
-    // 2. توزيع الصلاحيات كما طلبت بالضبط
+
+   // 💡 التعديل: إظهار زر الرفض للجميع (أدمن وموظف)
     if (isAdmin) {
-        // الأدمن: مخفي عنه الحالة والفريق، وظاهر له الإلغاء فقط (بالإضافة لتغيير النوع الافتراضي)
         if(statusControl) statusControl.style.display = 'none';
         if(teamControl) teamControl.style.display = 'none';
-        if(cancelBtn) cancelBtn.style.display = 'block'; // الأدمن يقدر يلغي/يحظر
     } else {
-        // الموظف: ظاهر له الحالة والفريق، ومخفي عنه الإلغاء
         if(statusControl) statusControl.style.display = 'block';
         if(teamControl) teamControl.style.display = 'block';
-        if(cancelBtn) cancelBtn.style.display = 'none'; // الموظف ميقدرش يلغي
     }
+    // زرار الإلغاء والرفض بقى بيظهر دايماً لأي حد يفتح البلاغ
+    if(cancelBtn) cancelBtn.style.display = 'block';
 
     document.getElementById('detailsContent').classList.add('d-none');
     document.getElementById('detailsSpinner').classList.remove('d-none');
@@ -278,13 +277,35 @@ async function openReportDetails(id) {
             // 💡 3. حل مشكلة الصورة
             const imgs = details.attachedMedia || details.AttachedMedia;
             if (imgs && imgs.length > 0) {
-                let imgPath = imgs[0].fileURL || imgs[0].FileURL; 
-                if (imgPath && !imgPath.startsWith('http')) {
-                    imgPath = `https://abdallahnasrat-001-site1.anytempurl.com/${imgPath}`; 
-                }
+                // ... (كودك القديم بتاع الصورة) ...
                 document.getElementById('reportImage').src = imgPath; 
             } else {
                 document.getElementById('reportImage').src = "https://cdn-icons-png.flaticon.com/512/854/854878.png"; 
+            }
+
+            // 💡 إضافة: فحص وعرض الصوت
+            const audioContainer = document.getElementById('reportAudioContainer');
+            // تأكد إن الخاصية دي (audioUrl أو VoiceRecord) هي نفس اسم الخاصية اللي الـ API بيرجعها
+            let audioPath = details.audioUrl || details.AudioUrl || details.voiceRecord || details.VoiceRecord; 
+            
+            if (audioPath && audioPath !== "") {
+                // لو المسار مش بيبدأ بـ http، بنركب عليه الدومين زي ما عملنا في الصورة
+                if (!audioPath.startsWith('http')) {
+                    audioPath = `https://abdallahnasrat-001-site1.anytempurl.com/${audioPath}`;
+                }
+                audioContainer.innerHTML = `
+                    <audio controls class="w-100" style="height: 40px; outline: none;">
+                        <source src="${audioPath}" type="audio/mpeg">
+                        <source src="${audioPath}" type="audio/wav">
+                        متصفحك لا يدعم تشغيل الصوت.
+                    </audio>
+                `;
+            } else {
+                audioContainer.innerHTML = `
+                    <p class="text-muted small mb-0 fw-bold">
+                        <i class="fa-solid fa-microphone-slash me-2 text-secondary"></i> لا يوجد تسجيل صوتي مرفق
+                    </p>
+                `;
             }
 
             // 4. تحديد الحالة للقائمة المنسدلة (فقط لو الموظف هو من يفتح، لأن الأدمن مش هيشوفها أصلاً)
@@ -391,11 +412,6 @@ async function updateType() {
 // 4. إلغاء البلاغ نهائياً
 async function cancelReport() {
     // 💡 حماية إضافية: لو اللي داخل موظف ومحاول ينفذها، نوقفه
-    if (!isAdmin) {
-        showAlert('ليس لديك صلاحية لإلغاء البلاغات!', 'danger');
-        return;
-    }
-
     if(!confirm('هل أنت متأكد من إلغاء البلاغ نهائياً؟')) return;
     
     try {
