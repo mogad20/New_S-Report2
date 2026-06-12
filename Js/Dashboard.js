@@ -9,7 +9,7 @@ let markersLayer = new L.LayerGroup();
 let currentSelectedReportId = 0;
 let isAdmin = false;
 let showResolvedOnMap = false; //  متغير للتحكم في ظهور الأرشيف على الخريطة
-
+let currentBatchReports = [];
 // تهيئة الخريطة
 function initMap() {
     map = L.map('mapView').setView([26.5569, 31.6947], 8);
@@ -85,6 +85,7 @@ async function fetchReports(endpoint) {
 
             // نحول الـ Map لمصفوفة نظيفة مفهاش تكرار ونبعتها للجدول
             let finalReports = Array.from(uniqueMap.values());
+            currentBatchReports = finalReports; // 👈 حفظناهم هنا عشان الزرار يلاقيهم
             distributeReports(finalReports);
             
         } else {
@@ -597,8 +598,11 @@ function showAlert(msg, type) {
     setTimeout(() => { container.innerHTML = ''; }, 4000);
 }
 
-//  دالة إظهار وإخفاء البلاغات المغلقة من على الخريطة
+// 💡 دالة إظهار وإخفاء البلاغات المغلقة من على الخريطة
 function toggleArchiveMarkers() {
     showResolvedOnMap = document.getElementById('toggleArchiveMap').checked;
-    distributeReports(allLoadedReports); // إعادة رسم الخريطة بناءً على اختيار الزرار
+    // 👈 بنعيد الرسم بناءً على البلاغات المحفوظة في المتغير الجديد
+    if (currentBatchReports.length > 0) {
+        distributeReports(currentBatchReports); 
+    }
 }
