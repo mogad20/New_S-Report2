@@ -249,7 +249,46 @@
                         <p id="reportDesc" class="mb-0 text-secondary lh-lg"></p>
                     </div>
                 </div>
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-primary border-bottom pb-2 mb-3"><i class="fa-solid fa-align-right me-1"></i> وصف المواطن</h6>
+                        <p id="reportDesc" class="mb-0 text-secondary lh-lg"></p>
+                    </div>
+                </div>
 
+                <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(to left, #ffffff, #f0f8ff);">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-info border-bottom border-info pb-2 mb-3">
+                            <i class="fa-solid fa-robot me-1 fa-bounce"></i> التحليل الذكي للبلاغ (AI)
+                        </h6>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small fw-bold"><i class="fa-solid fa-shield-halved me-1"></i> مصداقية البلاغ:</span>
+                            <span id="aiIsValid" class="badge bg-secondary px-3 py-2">جاري الفحص...</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted small fw-bold"><i class="fa-solid fa-temperature-half me-1"></i> الأولوية:</span>
+                            <span id="aiPriority" class="badge bg-secondary px-3 py-2">غير محدد</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted small fw-bold"><i class="fa-solid fa-percent me-1"></i> نسبة دقة التحليل:</span>
+                                <span id="aiConfidenceText" class="small fw-bold text-dark">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="aiConfidenceBar" class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-3 rounded-3 border border-info shadow-sm">
+                            <span class="text-info small fw-bold d-block mb-1"><i class="fa-solid fa-lightbulb text-warning me-1"></i> توصيات النظام:</span>
+                            <span id="aiRecommendations" class="small fw-bold text-dark lh-base">لا توجد توصيات.</span>
+                        </div>
+                    </div>
+                </div>
+                <h6 class="fw-bold text-dark mt-4 mb-3 ps-1"><i class="fa-solid fa-sliders text-danger me-1"></i> لوحة تحكم البلاغ</h6>
                 <h6 class="fw-bold text-dark mt-4 mb-3 ps-1"><i class="fa-solid fa-sliders text-danger me-1"></i> لوحة تحكم البلاغ</h6>
                 
               <!-- 1. كارت الحالة (للموظف فقط) -->
