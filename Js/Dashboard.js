@@ -39,63 +39,79 @@ function checkRoleAndLoad() {
 }
 
 // جلب البلاغات من السيرفر
-// جلب البلاغات من السيرفر (مع فلترة ذكية للتكرار)
-async function fetchReports(endpoint) {
+// جلب البلاغات من السيرفر (بنظام الشفط الشامل لجميع الصفحات)
+async function fetchReports(baseEndpoint) {
     try {
-        const noCacheUrl = endpoint.includes('?') ? `${endpoint}&t=${new Date().getTime()}` : `${endpoint}?t=${new Date().getTime()}`;
-        const response = await apiRequest(noCacheUrl, 'GET');
-        
-        if (response && response.ok) {
-            let reports = response.data.$values || response.data;
-            
-            // 💡 الحل الذكي: تصفية التكرار والاحتفاظ بـ "النسخة الأحدث" فقط
-            let uniqueMap = new Map();
+        let allFetchedReports = [];
+        let currentPage = 1;
+        let hasMore = true;
 
-            reports.forEach(r => {
-                const id = r.reportId || r.ReportId || r.id || r.Id;
+        // 💡 اللوب السحري: هيجيب كل الصفحات ورا بعض لحد ما يخلص البلاغات
+        while (hasMore) {
+            // 💡 التعديل هنا: طلبنا size=10 لأن ده اللي السيرفر متبرمج عليه إجبارياً
+            const url = `${baseEndpoint}?page=${currentPage}&size=10&excludeResolved=false&t=${new Date().getTime()}`;
+            const response = await apiRequest(url, 'GET');
+            
+            if (response && response.ok) {
+                let reports = response.data.$values || response.data;
                 
-                if (!uniqueMap.has(id)) {
-                    uniqueMap.set(id, r);
-                } else {
-                    // لو الـ ID متكرر، هنقارن الحالة عشان نعرف مين النسخة الأحدث
-                    const existing = uniqueMap.get(id);
+                if (reports && reports.length > 0) {
+                    allFetchedReports = allFetchedReports.concat(reports); // ندمج الجديد مع القديم
+                    currentPage++; // نخش على الصفحة اللي بعدها
                     
-                    // دالة بتدي "وزن" للحالة (الأكبر هو الأحدث)
-                    const getWeight = (obj) => {
-                        const s = String(obj.reportState || obj.ReportState || obj.state || obj.State || obj.status || obj.Status).toLowerCase().trim();
-                        if (s === "3" || s === "closed") return 3;
-                        if (s === "2" || s === "resolved") return 2;
-                        if (s === "1" || s === "inprogress") return 1;
-                        return 0; // pending أو غيره
-                    };
-
-                    const weightNew = getWeight(r);
-                    const weightOld = getWeight(existing);
-
-                    // لو النسخة الجديدة حالتها متقدمة، تمسح القديمة وتكسب
-                    if (weightNew > weightOld) {
-                        uniqueMap.set(id, r);
-                    } 
-                    // لو نفس الحالة (زي إنك غيرت التصنيف بس)، بنخلي آخر نسخة تيجي من السيرفر تمسح القديمة
-                    else if (weightNew === weightOld) {
-                        uniqueMap.set(id, r);
+                    // 💡 التعديل الأهم: اللوب مش هيقف غير لو السيرفر جاب أقل من 10 (معناها الخزان فضي)
+                    if (reports.length < 10) {
+                        hasMore = false;
                     }
+                } else {
+                    hasMore = false; // لو الصفحة فاضية نوقف
                 }
-            });
-
-            // نحول الـ Map لمصفوفة نظيفة مفهاش تكرار ونبعتها للجدول
-            let finalReports = Array.from(uniqueMap.values());
-            currentBatchReports = finalReports; // 👈 حفظناهم هنا عشان الزرار يلاقيهم
-            distributeReports(finalReports);
-            
-        } else {
-            showAlert('فشل جلب البلاغات من السيرفر', 'danger');
+            } else {
+                hasMore = false;
+                if (currentPage === 1) showAlert('فشل جلب البلاغات من السيرفر', 'danger');
+            }
         }
+        
+        // 💡 الحل الذكي: تصفية التكرار والاحتفاظ بـ "النسخة الأحدث" فقط
+        let uniqueMap = new Map();
+
+        allFetchedReports.forEach(r => {
+            const id = r.reportId || r.ReportId || r.id || r.Id;
+            
+            if (!uniqueMap.has(id)) {
+                uniqueMap.set(id, r);
+            } else {
+                const existing = uniqueMap.get(id);
+                
+                const getWeight = (obj) => {
+                    const s = String(obj.reportState || obj.ReportState || obj.state || obj.State || obj.status || obj.Status).toLowerCase().trim();
+                    if (s === "3" || s === "closed") return 3;
+                    if (s === "2" || s === "resolved") return 2;
+                    if (s === "1" || s === "inprogress") return 1;
+                    return 0; 
+                };
+
+                const weightNew = getWeight(r);
+                const weightOld = getWeight(existing);
+
+                if (weightNew > weightOld) {
+                    uniqueMap.set(id, r);
+                } 
+                else if (weightNew === weightOld) {
+                    uniqueMap.set(id, r);
+                }
+            }
+        });
+
+        // نحول الـ Map لمصفوفة نظيفة مفهاش تكرار ونبعتها للجدول والخريطة
+        let finalReports = Array.from(uniqueMap.values());
+        currentBatchReports = finalReports; // 👈 حفظناهم عشان زرار إظهار/إخفاء الأرشيف يشتغل
+        distributeReports(finalReports);
+        
     } catch (e) {
         showAlert('تعذر الاتصال بالسيرفر', 'danger');
     }
 }
-
 // توزيع البلاغات (زي الداتابيز بالظبط بدون بادجات)
 // توزيع البلاغات (ترجمة للعربي ودعم الدارك مود + أنيميشن البلاغ الجديد)
 function distributeReports(reports) {
