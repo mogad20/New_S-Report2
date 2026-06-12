@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    await loadLookups(); // تحميل المدن والموظفين الأول
+    loadLookups(); // تحميل المدن والموظفين الأول
     loadTeams();   // تحميل الجدول
 });
 
