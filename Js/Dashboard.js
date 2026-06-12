@@ -269,17 +269,16 @@ async function openReportDetails(id) {
                 formattedDateText = d.toLocaleString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             }
 
-            // تحديث كارت المُبلغ بالتفاصيل الجديدة
+           // تحديث كارت المُبلغ بالتفاصيل الجديدة
             document.getElementById('reportUser').innerHTML = `
-                <div class="d-flex flex-column gap-3">
-                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-1">
                         <span class="fw-bold text-dark fs-5"><i class="fa-solid fa-user text-secondary me-2"></i>${repName}</span>
                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-2 py-1">User ID: #${repId}</span>
                     </div>
-                    <div class="row g-2 text-muted small fw-bold">
-                        <div class="col-6"><i class="fa-solid fa-city text-danger me-1"></i> المدينة: <span class="text-dark">${cityName}</span></div>
-                        <div class="col-6"><i class="fa-regular fa-clock text-warning me-1"></i> التاريخ: <span class="text-dark" dir="ltr">${formattedDateText}</span></div>
-                        <div class="col-12 mt-2"><i class="fa-solid fa-users-gear text-success me-1"></i> الفريق الحالي: <span class="badge bg-light text-dark border fs-6">${teamName}</span></div>
+                    <div class="text-muted small fw-bold d-flex flex-column gap-2">
+                        <div><i class="fa-solid fa-city text-danger me-1"></i> المدينة: <span class="badge bg-light text-dark border fs-6">${cityName}</span></div>
+                        <div><i class="fa-regular fa-clock text-warning me-1"></i> التاريخ: <span class="text-dark" dir="ltr">${formattedDateText}</span></div>
                     </div>
                 </div>
             `;
