@@ -169,6 +169,12 @@
                 <div class="glass-panel h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3 px-2">
                         <h5 class="fw-bold m-0"><i class="fa-solid fa-map-location-dot text-primary me-2"></i> الرادار الجغرافي</h5>
+                        <div class="form-check form-switch" style="transform: scale(1.1); margin-left: 10px;">
+                            <input class="form-check-input shadow-sm" type="checkbox" id="toggleArchiveMap" onchange="toggleArchiveMarkers()" style="cursor: pointer;">
+                            <label class="form-check-label fw-bold text-muted small" for="toggleArchiveMap" style="cursor: pointer;">
+                                إظهار المنتهي والمغلق
+                            </label>
+                        </div>
                     </div>
                     <div id="mapView"></div>
                 </div>
