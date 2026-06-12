@@ -229,7 +229,6 @@ async function openReportDetails(id) {
     const statusControl = document.getElementById('employee-only-status'); // حالة البلاغ
     const teamControl = document.getElementById('employee-only-team');     // الفريق
     const cancelBtn = document.getElementById('employee-only-cancel');     // الإلغاء / الحظر
-    
 
    // 💡 التعديل: إظهار زر الرفض للجميع (أدمن وموظف)
     if (isAdmin) {
@@ -251,74 +250,154 @@ async function openReportDetails(id) {
             let details = res.data;
             document.getElementById('reportDesc').textContent = details.description || details.Description || 'لا يوجد وصف متاح.';
             
-            // 💡 1. جلب بيانات المُبلغ
+            // 💡 1. جلب بيانات المُبلغ والمدينة والتاريخ والفريق
             const repName = details.reporterName || details.ReporterName || "مواطن (بدون اسم)";
             const repId = details.reporterId || details.ReporterId || "غير محدد";
             
-            // 💡 2. جلب اسم المدينة
             const cityId = details.cityId || details.CityId || 0;
             let cityName = `مدينة رقم (${cityId})`;
             if (cityId === 29) cityName = "سوهاج";
             if (cityId === 1) cityName = "القاهرة";
             cityName = details.cityName || details.CityName || cityName;
 
+            const teamName = details.teamName || details.TeamName || "لم يتم التوجيه لأي فريق";
+            
+            let rawDate = details.date || details.Date || details.createdAt || details.CreatedAt;
+            let formattedDateText = "غير معروف";
+            if (rawDate) {
+                let d = new Date(rawDate);
+                formattedDateText = d.toLocaleString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
+
+            // تحديث كارت المُبلغ بالتفاصيل الجديدة
             document.getElementById('reportUser').innerHTML = `
-                <div class="d-flex flex-column gap-2">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fw-bold text-dark"><i class="fa-solid fa-user text-secondary me-1"></i> ${repName}</span>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                        <span class="fw-bold text-dark fs-5"><i class="fa-solid fa-user text-secondary me-2"></i>${repName}</span>
                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-2 py-1">User ID: #${repId}</span>
                     </div>
-                    <div class="text-muted small fw-bold">
-                        <i class="fa-solid fa-city text-danger me-1"></i> المدينة: <span class="badge bg-light text-dark border fs-6">${cityName}</span>
+                    <div class="row g-2 text-muted small fw-bold">
+                        <div class="col-6"><i class="fa-solid fa-city text-danger me-1"></i> المدينة: <span class="text-dark">${cityName}</span></div>
+                        <div class="col-6"><i class="fa-regular fa-clock text-warning me-1"></i> التاريخ: <span class="text-dark" dir="ltr">${formattedDateText}</span></div>
+                        <div class="col-12 mt-2"><i class="fa-solid fa-users-gear text-success me-1"></i> الفريق الحالي: <span class="badge bg-light text-dark border fs-6">${teamName}</span></div>
                     </div>
                 </div>
             `;
 
-            // 💡 3. حل مشكلة الصورة (الكود الكامل)
-            const imgs = details.attachedMedia || details.AttachedMedia;
-            if (imgs && imgs.length > 0) {
-                let imgPath = imgs[0].fileURL || imgs[0].FileURL; 
-                if (imgPath && !imgPath.startsWith('http')) {
-                    imgPath = `https://abdallahnasrat-001-site1.anytempurl.com/${imgPath}`; 
+            // 💡 2. ملء بيانات التحليل الذكي (AI)
+            const isValid = details.isValid !== undefined ? details.isValid : details.IsValid;
+            const priority = details.priority || details.Priority;
+            const confidence = details.confidenceScore || details.ConfidenceScore || 0;
+            const recommendations = details.recommendations || details.Recommendations || "لم يصدر النظام توصيات محددة لهذه الحالة.";
+
+            // المصداقية
+            const isValidBadge = document.getElementById('aiIsValid');
+            if (isValidBadge) {
+                if (isValid === true) {
+                    isValidBadge.className = "badge bg-success px-3 py-2";
+                    isValidBadge.innerHTML = '<i class="fa-solid fa-check-circle me-1"></i> بلاغ حقيقي';
+                } else if (isValid === false) {
+                    isValidBadge.className = "badge bg-danger px-3 py-2";
+                    isValidBadge.innerHTML = '<i class="fa-solid fa-times-circle me-1"></i> بلاغ كاذب / سبام';
+                } else {
+                    isValidBadge.className = "badge bg-secondary px-3 py-2";
+                    isValidBadge.innerHTML = '<i class="fa-solid fa-circle-question me-1"></i> غير محدد';
                 }
-                document.getElementById('reportImage').src = imgPath; 
+            }
+
+            // الأولوية
+            const priorityBadge = document.getElementById('aiPriority');
+            if (priorityBadge) {
+                let pStr = String(priority).toLowerCase();
+                if (pStr === "high" || pStr === "عالي") {
+                    priorityBadge.className = "badge bg-danger px-3 py-2";
+                    priorityBadge.innerHTML = '<i class="fa-solid fa-fire me-1"></i> عالي الخطورة';
+                } else if (pStr === "medium" || pStr === "متوسط") {
+                    priorityBadge.className = "badge bg-warning text-dark px-3 py-2";
+                    priorityBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> متوسط';
+                } else if (pStr === "low" || pStr === "منخفض") {
+                    priorityBadge.className = "badge bg-info px-3 py-2";
+                    priorityBadge.innerHTML = '<i class="fa-solid fa-arrow-down me-1"></i> منخفض';
+                } else {
+                    priorityBadge.className = "badge bg-secondary px-3 py-2";
+                    priorityBadge.innerText = priority || "غير محدد";
+                }
+            }
+
+            // نسبة الثقة
+            const confText = document.getElementById('aiConfidenceText');
+            const confBar = document.getElementById('aiConfidenceBar');
+            if (confText && confBar) {
+                let confPercentage = Math.round(confidence * 100); 
+                if (confidence > 1) confPercentage = confidence; 
+                
+                confText.innerText = `${confPercentage}%`;
+                confBar.style.width = `${confPercentage}%`;
+                
+                if (confPercentage >= 80) confBar.className = "progress-bar bg-success progress-bar-striped progress-bar-animated";
+                else if (confPercentage >= 50) confBar.className = "progress-bar bg-warning progress-bar-striped progress-bar-animated";
+                else confBar.className = "progress-bar bg-danger progress-bar-striped progress-bar-animated";
+            }
+
+            // التوصيات
+            const recElement = document.getElementById('aiRecommendations');
+            if (recElement) recElement.innerText = recommendations;
+
+            // 💡 3. حل مشكلة الصورة وعرضها من المصفوفة
+            const mediaItems = details.attachedMedia || details.AttachedMedia;
+            let imgPath = null;
+
+            if (mediaItems && mediaItems.length > 0) {
+                mediaItems.forEach(item => {
+                    let fileUrl = item.fileURL || item.FileURL;
+                    let mediaType = item.mediaType || item.MediaType || "";
+                    if (mediaType.toLowerCase() === 'image' && fileUrl) {
+                        imgPath = fileUrl; // مسكنا الصورة
+                    }
+                });
+            }
+
+            if (imgPath) {
+                if (!imgPath.startsWith('http')) {
+                    imgPath = `https://abdallahnasrat-001-site1.anytempurl.com/${imgPath}`;
+                }
+                document.getElementById('reportImage').src = imgPath;
             } else {
-                document.getElementById('reportImage').src = "https://cdn-icons-png.flaticon.com/512/854/854878.png"; 
+                document.getElementById('reportImage').src = "https://cdn-icons-png.flaticon.com/512/854/854878.png";
             }
 
-            // 💡 التعديل المباشر لاستخراج وعرض الصوت من مصفوفة attachedMedia
-    const audioContainer = document.getElementById('reportAudioContainer');
-    
-    // رسالة افتراضية في حالة عدم وجود صوت
-    audioContainer.innerHTML = `
-        <p class="text-muted small mb-0 fw-bold">
-            <i class="fa-solid fa-microphone-slash me-2 text-secondary"></i> لا يوجد تسجيل صوتي مرفق
-        </p>
-    `;
+            // 💡 4. استخراج وعرض الصوت من المصفوفة
+            const audioContainer = document.getElementById('reportAudioContainer');
+            
+            // رسالة افتراضية
+            audioContainer.innerHTML = `
+                <p class="text-muted small mb-0 fw-bold">
+                    <i class="fa-solid fa-microphone-slash me-2 text-secondary"></i> لا يوجد تسجيل صوتي مرفق
+                </p>
+            `;
 
-    const mediaItems = details.attachedMedia || details.AttachedMedia;
-    if (mediaItems && mediaItems.length > 0) {
-        mediaItems.forEach(item => {
-            let fileUrl = item.fileURL || item.FileURL;
-            let mediaType = item.mediaType || item.MediaType || "";
+            if (mediaItems && mediaItems.length > 0) {
+                mediaItems.forEach(item => {
+                    let fileUrl = item.fileURL || item.FileURL;
+                    let mediaType = item.mediaType || item.MediaType || "";
 
-            // التحقق إذا كان العنصر الحالي هو ملف صوتي
-            if (mediaType.toLowerCase() === 'audio' && fileUrl) {
-                if (!fileUrl.startsWith('http')) {
-                    fileUrl = `https://abdallahnasrat-001-site1.anytempurl.com/${fileUrl}`;
-                }
-                audioContainer.innerHTML = `
-                    <audio controls class="w-100" style="height: 40px; outline: none;">
-                        <source src="${fileUrl}" type="audio/mpeg">
-                        <source src="${fileUrl}" type="audio/mp4">
-                        <source src="${fileUrl}" type="audio/x-m4a">
-                        <source src="${fileUrl}" type="audio/wav">
-                        متصفحك لا يدعم تشغيل الصوت.
-                    </audio>
-                `;
+                    if (mediaType.toLowerCase() === 'audio' && fileUrl) {
+                        if (!fileUrl.startsWith('http')) {
+                            fileUrl = `https://abdallahnasrat-001-site1.anytempurl.com/${fileUrl}`;
+                        }
+                        audioContainer.innerHTML = `
+                            <audio controls class="w-100" style="height: 40px; outline: none;">
+                                <source src="${fileUrl}" type="audio/mpeg">
+                                <source src="${fileUrl}" type="audio/mp4">
+                                <source src="${fileUrl}" type="audio/x-m4a">
+                                <source src="${fileUrl}" type="audio/wav">
+                                متصفحك لا يدعم تشغيل الصوت.
+                            </audio>
+                        `;
+                    }
+                });
             }
-        });
-    }
+
             // 5. تحديد الحالة للقائمة المنسدلة
             if (!isAdmin) {
                 const state = details.reportState !== undefined ? details.reportState : details.ReportState;
@@ -341,7 +420,7 @@ async function openReportDetails(id) {
             panel.hide();
         }
     } catch(e) {
-        console.error("Error loading report details:", e); // هيطبعلك الإيرور الحقيقي لو في حاجة تانية
+        console.error("Error loading report details:", e); 
         showAlert('خطأ في الاتصال', 'danger');
         panel.hide();
     }
