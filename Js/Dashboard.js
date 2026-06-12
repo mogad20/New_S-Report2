@@ -8,6 +8,7 @@ let map;
 let markersLayer = new L.LayerGroup();
 let currentSelectedReportId = 0;
 let isAdmin = false;
+let showResolvedOnMap = false; //  متغير للتحكم في ظهور الأرشيف على الخريطة
 
 // تهيئة الخريطة
 function initMap() {
@@ -134,22 +135,22 @@ function distributeReports(reports) {
         if (stateStr === "1" || stateStr === "inprogress") {
             isInProgress = true;
             displayStateAr = "جاري العمل";
-            pinColor = 'blue';
+            pinColor = 'blue'; // 🔵
             cntProg++;
         } else if (stateStr === "2" || stateStr === "resolved") {
             isResolved = true;
             displayStateAr = "تم الحل";
-            pinColor = 'green';
+            pinColor = 'green'; // 🟢
             cntRes++;
         } else if (stateStr === "3" || stateStr === "closed") {
             isResolved = true;
             displayStateAr = "مغلق";
-            pinColor = 'green';
+            pinColor = 'grey'; // ⚪ (لون مميز للمغلق)
             cntRes++; 
         } else {
             isPending = true;
             displayStateAr = "قيد الانتظار";
-            pinColor = 'red';
+            pinColor = 'red'; // 🔴
             cntPending++;
         }
 
@@ -160,36 +161,36 @@ function distributeReports(reports) {
         if (date) {
             let reportDate = new Date(date);
             let now = new Date();
-            
-            // بنحسب الفرق بالدقايق
             let diffInMinutes = Math.abs(now.getTime() - reportDate.getTime()) / (1000 * 60);
             
-            // لو كان البلاغ مبعوت من أقل من 5 دقايق ولسه حالته Pending
             if (diffInMinutes <= 5 && isPending) {
                 newBadge = `<span class="badge bg-danger text-white badge-urgent ms-2 float-start">
                                 <i class="fa-solid fa-triangle-exclamation fa-beat-fade me-1"></i> عاجل
                             </span>`;
-                alertClass = "new-report-row"; // الكلاس اللي بيلون السطر
+                alertClass = "new-report-row";
             }
         }
 
+        // 💡 إضافة شرط الإخفاء هنا: مش هنرسم الدبوس إلا لو البلاغ مش أرشيف، أو الزرار متفعل
         if (lat && lng && lat != 0) {
-            const iconUrl = `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${pinColor}.png`;
-            const customIcon = L.icon({
-                iconUrl: iconUrl,
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-            });
+            if (!isResolved || showResolvedOnMap) {
+                const iconUrl = `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${pinColor}.png`;
+                const customIcon = L.icon({
+                    iconUrl: iconUrl,
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
+                });
 
-            const marker = L.marker([lat, lng], { icon: customIcon });
-            marker.bindPopup(`
-                <div class="text-center fw-bold">
-                    <h6 class="mb-1 text-primary">${type}</h6>
-                    <div class="mb-2">${displayStateAr}</div>
-                    <button class="btn btn-sm btn-dark w-100" onclick="openReportDetails(${id})">معاينة</button>
-                </div>
-            `);
-            markersLayer.addLayer(marker);
+                const marker = L.marker([lat, lng], { icon: customIcon });
+                marker.bindPopup(`
+                    <div class="text-center fw-bold">
+                        <h6 class="mb-1 text-primary">${type}</h6>
+                        <div class="mb-2">${displayStateAr}</div>
+                        <button class="btn btn-sm btn-dark w-100" onclick="openReportDetails(${id})">معاينة</button>
+                    </div>
+                `);
+                markersLayer.addLayer(marker);
+            }
         }
 
         // 💡 التعديل هنا: دمجنا كلاس السطر والبادج جوه הـ HTML
@@ -594,4 +595,10 @@ function showAlert(msg, type) {
             ${msg} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>`;
     setTimeout(() => { container.innerHTML = ''; }, 4000);
+}
+
+//  دالة إظهار وإخفاء البلاغات المغلقة من على الخريطة
+function toggleArchiveMarkers() {
+    showResolvedOnMap = document.getElementById('toggleArchiveMap').checked;
+    distributeReports(allLoadedReports); // إعادة رسم الخريطة بناءً على اختيار الزرار
 }
