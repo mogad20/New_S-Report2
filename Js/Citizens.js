@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCitizensData();
 });
 
-// متغيرات عشان نحفظ الداتا للـ Modal
 let globalCitizensList = [];
 let currentAdminStatus = false;
 
@@ -46,8 +45,7 @@ async function loadCitizensData() {
             console.warn("مقدرناش نجيب بروفايل المستخدم.");
         }
 
-        // 💡 ضفنا الـ page والـ size في المسارين عشان يجيب كل الداتا سواء أدمن أو موظف
-const endpoint = canSeeAll ? 'User/All?page=1&size=1000' : 'User/InCity?page=1&size=50';
+const endpoint = canSeeAll ? 'User/All?page=1&size=100' : 'User/InCity?page=1&size=50';
         console.log(`جاري جلب المواطنين من مسار: ${endpoint}`);
 
         const citizensRes = await apiRequest(endpoint, 'GET');
@@ -57,7 +55,7 @@ const endpoint = canSeeAll ? 'User/All?page=1&size=1000' : 'User/InCity?page=1&s
             if (citizens && citizens.$values) citizens = citizens.$values;
             if (!Array.isArray(citizens)) citizens = [citizens];
 
-            globalCitizensList = citizens; // حفظنا الداتا
+            globalCitizensList = citizens; 
             countSpan.textContent = citizens.length;
             tableBody.innerHTML = ''; 
 
@@ -76,7 +74,7 @@ const endpoint = canSeeAll ? 'User/All?page=1&size=1000' : 'User/InCity?page=1&s
             }
 
             citizens.forEach(user => {
-                const userId = user.id || user.Id; // مهم عشان مسار الحظر
+                const userId = user.id || user.Id; 
                 const fName = user.firstName || user.FirstName || "";
                 const sName = user.secoundName || user.SecoundName || "";
                 let fullName = (fName || sName) ? `${fName} ${sName}`.trim() : "بدون اسم";
@@ -88,7 +86,6 @@ const endpoint = canSeeAll ? 'User/All?page=1&size=1000' : 'User/InCity?page=1&s
                 const address = user.address || user.Address || "غير محدد";
                 const isVolunteer = user.volunteer || user.Volunteer || false;
 
-                // 💡 التعديل هنا: دمج زرار الحذف بتاعك مع زرار التفاصيل الجديد
                 let actionHtml = '';
                 actionHtml += `
                     <button onclick="openCitizenModal('${userId || nationalId}')" class="btn btn-sm btn-primary shadow-sm rounded-pill px-3">
@@ -135,7 +132,7 @@ const endpoint = canSeeAll ? 'User/All?page=1&size=1000' : 'User/InCity?page=1&s
     }
 }
 
-// دالة الحذف الأصلية بتاعتك
+// دالة الحذف الأصلية 
 async function deleteCitizen(nationalId) {
     if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
 
@@ -153,9 +150,7 @@ async function deleteCitizen(nationalId) {
     }
 }
 
-// ==========================================
-// 💡 دوال النافذة المنبثقة والحظر (الجديدة)
-// ==========================================
+
 
 function openCitizenModal(identifier) {
     const user = globalCitizensList.find(u => (u.id == identifier || u.Id == identifier || u.nationalId == identifier || u.NationalId == identifier));
