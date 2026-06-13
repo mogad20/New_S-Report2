@@ -1,7 +1,5 @@
-// هنستنى لما الصفحة تحمل خالص
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 💡 دالة صغيرة لفك تشفير التوكن ومعرفة مسار التوجيه (التوجيه الذكي)
     function getRedirectUrl(token) {
         try {
             const base64Url = token.split('.')[1];
@@ -25,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'Dashboard.html'; 
     }
 
-    // لو اليوزر أصلاً معاه توكن (يعني عامل لوجين قبل كده)، نحوله بذكاء فوراً للصفحة بتاعته
     const existingToken = localStorage.getItem('ApiToken');
     if (existingToken) {
         window.location.href = getRedirectUrl(existingToken);
@@ -37,26 +34,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginBtn = document.getElementById('loginBtn');
 
     loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // عشان الصفحة متعملش ريفريش
+        e.preventDefault();
 
-        // نسحب الإيميل والباسورد اللي اليوزر كتبهم
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
-        // شوية حركات للـ UX: نقفل الزرار ونكتب "جاري التحميل"
         loginBtn.disabled = true;
         loginBtn.innerHTML = '⏳ جاري تسجيل الدخول...';
         errorMessage.style.display = 'none';
 
-        // ضفنا الـ try والـ catch هنا بناءً على طلبك
         try {
-            // 💡 نستخدم المحرك بتاعنا اللي عملناه في apiService.js
             const response = await apiRequest('/Auth/Login', 'POST', { email, password });
 
             if (response.ok && response.data.token) {
-                // اللوجين نجح!
                 
-                // 1. استخراج الصلاحية (Role) بطريقة قوية
                 let role = response.data.role;
                 
                 // لو الباك إند مش بيبعت الـ role صراحة، هنفكه من التوكن
@@ -68,15 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                         }).join(''));
                         const userData = JSON.parse(jsonPayload);
-                        // مفاتيح الـ Role الشهيرة في بيئة .NET
                         role = userData['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || userData.role || userData.Role || '';
                     } catch(e) { console.error("Error decoding token for role", e); }
                 }
 
-                // توحيد حالة الحروف عشان نتجنب المشاكل (citizen, Citizen, User)
                 let safeRole = (role || '').toString().toLowerCase();
 
-                // 🛑 المنع الصارم للمواطنين
                 if (safeRole === 'citizen' || safeRole === 'user' || safeRole === 'مواطن' || safeRole === '') {
                     showError('تسجيل الدخول خاص للكوادر والموظفين.');
                     loginBtn.disabled = false;
@@ -84,26 +72,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     return; // نوقف الكود هنا والـ Redirect مش هيشتغل
                 }
 
-                // 2. نخزن التوكن في الخزنة (localStorage)
                 localStorage.setItem('ApiToken', response.data.token);
                 
-                // بنخزن الـ Role أوتوماتيك أول ما يدخل
                 localStorage.setItem('userRole', role);
                 
-                // 3. 🚀 التوجيه الذكي للصفحة المناسبة حسب الفريق
                 window.location.href = getRedirectUrl(response.data.token);
             } else {
-                // اللوجين فشل (إيميل أو باسورد غلط)
                 showError('❌ خطأ في البريد الإلكتروني أو كلمة المرور');
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = 'تسجيل الدخول';
             }
         } catch (error) {
-            // لو حصل أي Error في الاتصال أو من السيرفر، هيمسكه ويثبته على الشاشة
             console.error("خطأ تم التقاطه بواسطة الـ Catch:", error);
             showError(`❌ حدث خطأ: ${error.message || 'لا يمكن الاتصال بالسيرفر'}`);
             
-            // نرجع الزرار يشتغل تاني عشان تعرف تدوس عليه
             loginBtn.disabled = false;
             loginBtn.innerHTML = 'تسجيل الدخول';
         }
