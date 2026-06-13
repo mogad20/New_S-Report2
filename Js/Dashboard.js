@@ -77,7 +77,7 @@ async function fetchReports(endpoint) {
                 }
             });
 
-=            let finalReports = Array.from(uniqueMap.values());
+           let finalReports = Array.from(uniqueMap.values());
             currentBatchReports = finalReports;
             distributeReports(finalReports);
             
