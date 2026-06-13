@@ -1,16 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
-    loadLookups(); // تحميل المدن والموظفين الأول
-    loadTeams();   // تحميل الجدول
+    loadLookups(); 
+    loadTeams();   
 });
 
-let citiesMap = {}; // عشان نترجم CityId لاسم المدينة في الجدول
+let citiesMap = {}; 
 let currentSelectedTeamId = 0; 
 let allTeams = [];
 
-// 1. تحميل القوائم المساعدة (المدن والموظفين)
 async function loadLookups() {
     try {
-        // تحميل المدن
         const citiesRes = await apiRequest('General/Cities', 'GET');
         if (citiesRes && citiesRes.ok) {
             const citySelect = document.getElementById('teamCity');
@@ -23,7 +21,6 @@ async function loadLookups() {
             });
         }
 
-        // تحميل الموظفين لربطهم
         const empRes = await apiRequest('Employee/All', 'GET');
         if (empRes && empRes.ok) {
             const empSelect = document.getElementById('assignEmployeeId');
@@ -42,7 +39,6 @@ async function loadLookups() {
     }
 }
 
-// 2. تحميل جدول الفرق
 async function loadTeams() {
     const tableBody = document.getElementById('teamsTableBody');
     try {
@@ -65,7 +61,6 @@ async function loadTeams() {
                 const cityName = citiesMap[cId] || `مدينة كود ${cId}`;
                 const state = team.state || team.State || 'Available';
 
-                // رسم حالة الفريق
                 let stateHtml = '';
                 if (state.toLowerCase() === 'available' || state == 0) stateHtml = `<span class="badge bg-success px-3">🟢 متاح</span>`;
                 else if (state.toLowerCase() === 'busy' || state == 1) stateHtml = `<span class="badge bg-danger px-3">🔴 مشغول</span>`;
@@ -100,7 +95,6 @@ async function loadTeams() {
     }
 }
 
-// 3. فتح نافذة الإضافة/التعديل
 function openTeamModal(id = 0) {
     const modalTitle = document.getElementById('teamModalTitle');
     const form = document.getElementById('teamForm');
@@ -122,7 +116,6 @@ function openTeamModal(id = 0) {
     new bootstrap.Modal(document.getElementById('teamModal')).show();
 }
 
-// 4. حفظ الفريق (Create أو Edit)
 document.getElementById('teamForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('saveTeamBtn');
@@ -132,7 +125,6 @@ document.getElementById('teamForm').addEventListener('submit', async (e) => {
     const id = document.getElementById('teamId').value;
     const isEdit = id !== "";
 
-    // تطابق مع CreateTeamDTO و TeamDTO
     let payload = {
         name: document.getElementById('teamName').value,
         cityId: parseInt(document.getElementById('teamCity').value)
@@ -163,7 +155,6 @@ document.getElementById('teamForm').addEventListener('submit', async (e) => {
     }
 });
 
-// 5. حظر الفريق
 async function blockTeam(id) {
     if(!confirm("هل أنت متأكد من حظر هذا الفريق؟")) return;
     try {
@@ -175,7 +166,6 @@ async function blockTeam(id) {
     } catch(e) { showAlert('خطأ في الاتصال', 'danger'); }
 }
 
-// 6. ربط موظف
 function openAssignModal(teamId, teamName) {
     currentSelectedTeamId = teamId;
     document.getElementById('assignTeamName').textContent = teamName;
@@ -187,7 +177,6 @@ document.getElementById('assignForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const empId = document.getElementById('assignEmployeeId').value;
     
-    // تطابق AssignEmployeeToTeamDTO
     const payload = {
         employeeId: parseInt(empId),
         teamId: parseInt(currentSelectedTeamId)
@@ -202,7 +191,6 @@ document.getElementById('assignForm').addEventListener('submit', async (e) => {
     } catch(e) { showAlert('خطأ في الاتصال', 'danger'); }
 });
 
-// 7. تحديث الحالة
 function openStateModal(teamId, currentState) {
     currentSelectedTeamId = teamId;
     
@@ -221,7 +209,7 @@ async function changeTeamState() {
     // تطابق UpdateTeamStateDTO
     const payload = {
         teamId: parseInt(currentSelectedTeamId),
-        state: newState // أو تحويلها لرقم لو الباك إند بيطلب Enum int
+        state: newState 
     };
 
     try {
@@ -234,7 +222,6 @@ async function changeTeamState() {
     } catch(e) { showAlert('خطأ في الاتصال', 'danger'); }
 }
 
-// نظام الرسايل (Alerts)
 function showAlert(msg, type) {
     const container = document.getElementById('alertContainer');
     container.innerHTML = `
