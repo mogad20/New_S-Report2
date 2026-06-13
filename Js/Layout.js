@@ -8,7 +8,6 @@ function initTheme() {
     if (storedTheme) {
         document.documentElement.setAttribute('data-bs-theme', storedTheme);
     } else {
-        // بدلاً من فحص نظام التشغيل، سنفرض 'light' كقيمة افتراضية
         document.documentElement.setAttribute('data-bs-theme', 'light');
         localStorage.setItem('theme', 'light'); // اختياري: لحفظ الخيار للمرات القادمة
     }
