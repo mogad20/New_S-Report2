@@ -1,5 +1,3 @@
-
-// 1. دالة إرسال الإشعار
 async function submitUserNotification(notificationData) {
     try {
         const response = await apiRequest('Notification/user', 'POST', notificationData);
@@ -17,7 +15,6 @@ async function submitUserNotification(notificationData) {
     }
 }
 
-// 2. التنفيذ لما تدوس "إرسال"
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('notificationForm');
     
