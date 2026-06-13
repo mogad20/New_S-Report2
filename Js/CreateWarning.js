@@ -3,17 +3,14 @@ async function loadCities() {
     try {
         const response = await apiRequest('/General/Cities', 'GET');
         
-        // التحقق: هل الـ response مصفوفة مباشرة أم داتا جوا object
         const citiesArray = Array.isArray(response) ? response : (response.data || response.result || []);
 
         if (citiesArray.length > 0) {
             const select = $('#citySelect');
             select.empty(); 
             citiesArray.forEach(city => {
-                // التأكد من أسماء الحقول (name و id)
                 select.append(new Option(city.name, city.id));
             });
-            // تفعيل الـ Select2 بعد إضافة البيانات
             select.select2({ dir: "rtl", width: '100%', placeholder: "اختر المدن..." });
         } else {
             console.warn("الـ API لم يرجع مدن، تأكد من الـ Endpoint");
