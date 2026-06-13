@@ -250,6 +250,14 @@ async function openReportDetails(id) {
         const res = await apiRequest(`Report/ReportDetails/${id}`, 'GET');
         if (res.ok) {
             let details = res.data;
+            
+            // 💡 عرض نوع/تصنيف البلاغ في البادج الجديد
+            const type = details.reportType || details.ReportType || "غير محدد";
+            const catBadge = document.getElementById('reportCategoryBadge');
+            if(catBadge) {
+                catBadge.innerHTML = `<i class="fa-solid fa-tag me-1"></i> ${type}`;
+            }
+
             document.getElementById('reportDesc').textContent = details.description || details.Description || 'لا يوجد وصف متاح.';
             
             // 💡 1. جلب بيانات المُبلغ والمدينة والتاريخ والفريق
