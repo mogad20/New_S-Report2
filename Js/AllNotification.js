@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userData = getUserDataFromToken();
     const role = userData['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || userData.role || '';
     
-    // حماية الصفحة: لو مش أدمن، اطرده على الداشبورد
+    // لو مش أدمن، اطرده على الداشبورد
     if (role !== 'Admin') {
         window.location.href = 'dashboard.html';
         return;
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('notificationsTableBody');
     const loadingMessage = document.getElementById('loadingMessage');
 
-    // سحب الإشعارات (تأكد إن ده لينك الـ API الصحيح عند عبد الله)
+    
     const response = await apiRequest('/Notification/all-Notifications', 'GET');
 
     loadingMessage.style.display = 'none';
