@@ -13,10 +13,10 @@
         
         body { 
             font-family: 'Cairo', sans-serif !important; 
-            background-color: #f4f7f6; /* لون خلفية أهدى وأريح للعين */
+            background-color: #f4f7f6;
         }
         
-        /* 🎨 كروت الإحصائيات العصرية (Gradients & Hover Effects) */
+
         .stat-card { 
             border-radius: 20px; 
             padding: 25px; 
@@ -47,7 +47,7 @@
         .bg-gradient-info { background: linear-gradient(135deg, #11998e, #38ef7d); }
         .bg-gradient-success { background: linear-gradient(135deg, #00b09b, #96c93d); }
 
-        /* 🗺️ الخريطة واللوحات */
+       
         .glass-panel {
             background: #ffffff;
             border-radius: 20px;
@@ -62,7 +62,7 @@
             z-index: 1; 
         }
 
-        /* 📋 قائمة البلاغات الجانبية */
+        
         .reports-container {
             height: 500px; /* نفس طول الخريطة */
             display: flex;
@@ -74,7 +74,7 @@
             padding-right: 5px;
         }
 
-        /* Scrollbar شيك للجدول */
+       
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
@@ -83,14 +83,15 @@
         .table th { background-color: #f8f9fa; border-bottom: 2px solid #eee; font-size: 0.9rem; }
         .table td { font-size: 0.85rem; vertical-align: middle; }
 
-        /* الشاشة الجانبية (Offcanvas) */
+        /* (Offcanvas) */
         .offcanvas-end { width: 450px !important; border-left: none; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
         .details-img { max-height: 250px; object-fit: cover; border-radius: 12px; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* تابز (Tabs) شيك */
+        
         .nav-tabs .nav-link { border: none; font-weight: 600; color: #6c757d; padding: 10px 15px; border-radius: 10px 10px 0 0; }
         .nav-tabs .nav-link.active { border-bottom: 3px solid #4e54c8; color: #4e54c8; background: transparent; }
-        /* 💡 أنيميشن البلاغ الجديد (Pulse) 💡 */
+        
+        
 @keyframes dangerPulse {
     0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -106,8 +107,8 @@
 }
 
 .new-report-row {
-    background-color: #fff1f1 !important; /* لون أحمر خفيف جداً للسطر */
-    border-right: 5px solid #dc3545 !important; /* خط أحمر في أول السطر */
+    background-color: #fff1f1 !important;
+    border-right: 5px solid #dc3545 !important; 
     transition: all 0.5s ease;
 }
     </style>
