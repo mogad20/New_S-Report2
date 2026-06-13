@@ -6,7 +6,7 @@ async function submitUserNotification(notificationData) {
         
         if (response && response.ok) {
             alert("تم إرسال الإشعار للمواطن بنجاح! ✅");
-            document.getElementById('notificationForm').reset(); // بيفضي الخانات بعد النجاح
+            document.getElementById('notificationForm').reset(); 
         } else {
             console.error("السيرفر رفض الداتا:", response);
             alert("فشل الإرسال! تأكد إن رقم الـ ID صحيح.");
@@ -25,17 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // بياخد الرقم اللي أنت كتبته في الـ Input
             const inputValue = document.getElementById('userIdInput').value;
 
-            // بيجهزه ويبعته كـ Integer
             const data = {
                 UserId: parseInt(inputValue), 
                 Title: document.getElementById('title').value,
                 Body: document.getElementById('body').value
             };
 
-            // بيتأكد إنك كتبت رقم فعلاً
             if (!data.UserId || isNaN(data.UserId)) {
                 alert("خطأ: يرجى إدخال رقم ID صحيح!");
                 return;
@@ -46,11 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-// دالة لجلب المبلّغين فقط (Reporters)
 async function loadReporters() {
     try {
-        // بدل 'Report/All' استخدم 'Report/CityReports'
-        // المسار ده شغال معاك في الداشبورد أكيد، فمش هيديك 403
         const response = await apiRequest('Report/CityReports?page=1&size=1000', 'GET'); 
         
         if (response && response.ok) {
@@ -73,7 +67,6 @@ async function loadReporters() {
             
             select.innerHTML = options;
 
-            // إعادة تهيئة الـ Select2 عشان يسمع القائمة الجديدة
             $(select).select2({
                 placeholder: "ابحث عن مُبلغ بالاسم أو الـ ID...",
                 allowClear: true
