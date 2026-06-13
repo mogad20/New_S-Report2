@@ -8,9 +8,9 @@ let map;
 let markersLayer = new L.LayerGroup();
 let currentSelectedReportId = 0;
 let isAdmin = false;
-let showResolvedOnMap = false; //  متغير للتحكم في ظهور الأرشيف على الخريطة
+let showResolvedOnMap = false; 
 let currentBatchReports = [];
-// تهيئة الخريطة
+
 function initMap() {
     map = L.map('mapView').setView([26.5569, 31.6947], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -19,7 +19,7 @@ function initMap() {
     markersLayer.addTo(map);
 }
 
-// فحص الصلاحيات وتحديد المسار
+
 // فحص الصلاحيات وتحديد المسار
 function checkRoleAndLoad() {
     const role = localStorage.getItem('userRole') || 'Employee'; 
@@ -32,14 +32,13 @@ function checkRoleAndLoad() {
     // 💡 التعديل هنا: حطينا كل المسميات (PageSize, pageSize, size) عشان الباك إند يلقطها غصب عنه
     // وخلينا الرقم 10000 عشان يجيب كل البلاغات وميوقفش عند 10
     const endpoint = isAdmin 
-        ? 'Report/All?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false' 
-        : 'Report/CityReports?PageNumber=1&PageSize=10000&page=1&size=10000&pageSize=10000&excludeResolved=false';
+        ? 'Report/All?PageNumber=1&PageSize=100&page=1&size=100&pageSize=100&excludeResolved=false' 
+        : 'Report/CityReports?PageNumber=1&PageSize=100&page=1&size=100&pageSize=100&excludeResolved=false';
         
     fetchReports(endpoint); 
 }
 
-// جلب البلاغات من السيرفر
-// جلب البلاغات من السيرفر (مع فلترة ذكية للتكرار)
+
 async function fetchReports(endpoint) {
     try {
         const noCacheUrl = endpoint.includes('?') ? `${endpoint}&t=${new Date().getTime()}` : `${endpoint}?t=${new Date().getTime()}`;
@@ -48,7 +47,6 @@ async function fetchReports(endpoint) {
         if (response && response.ok) {
             let reports = response.data.$values || response.data;
             
-            // 💡 الحل الذكي: تصفية التكرار والاحتفاظ بـ "النسخة الأحدث" فقط
             let uniqueMap = new Map();
 
             reports.forEach(r => {
@@ -57,10 +55,8 @@ async function fetchReports(endpoint) {
                 if (!uniqueMap.has(id)) {
                     uniqueMap.set(id, r);
                 } else {
-                    // لو الـ ID متكرر، هنقارن الحالة عشان نعرف مين النسخة الأحدث
                     const existing = uniqueMap.get(id);
                     
-                    // دالة بتدي "وزن" للحالة (الأكبر هو الأحدث)
                     const getWeight = (obj) => {
                         const s = String(obj.reportState || obj.ReportState || obj.state || obj.State || obj.status || obj.Status).toLowerCase().trim();
                         if (s === "3" || s === "closed") return 3;
@@ -72,20 +68,17 @@ async function fetchReports(endpoint) {
                     const weightNew = getWeight(r);
                     const weightOld = getWeight(existing);
 
-                    // لو النسخة الجديدة حالتها متقدمة، تمسح القديمة وتكسب
                     if (weightNew > weightOld) {
                         uniqueMap.set(id, r);
                     } 
-                    // لو نفس الحالة (زي إنك غيرت التصنيف بس)، بنخلي آخر نسخة تيجي من السيرفر تمسح القديمة
                     else if (weightNew === weightOld) {
                         uniqueMap.set(id, r);
                     }
                 }
             });
 
-            // نحول الـ Map لمصفوفة نظيفة مفهاش تكرار ونبعتها للجدول
-            let finalReports = Array.from(uniqueMap.values());
-            currentBatchReports = finalReports; // 👈 حفظناهم هنا عشان الزرار يلاقيهم
+=            let finalReports = Array.from(uniqueMap.values());
+            currentBatchReports = finalReports;
             distributeReports(finalReports);
             
         } else {
@@ -96,8 +89,6 @@ async function fetchReports(endpoint) {
     }
 }
 
-// توزيع البلاغات (زي الداتابيز بالظبط بدون بادجات)
-// توزيع البلاغات (ترجمة للعربي ودعم الدارك مود + أنيميشن البلاغ الجديد)
 function distributeReports(reports) {
     const activeBody = document.getElementById('activeTableBody');
     const archiveBody = document.getElementById('archiveTableBody');
@@ -136,26 +127,26 @@ function distributeReports(reports) {
         if (stateStr === "1" || stateStr === "inprogress") {
             isInProgress = true;
             displayStateAr = "جاري العمل";
-            pinColor = 'blue'; // 🔵
+            pinColor = 'blue'; 
             cntProg++;
         } else if (stateStr === "2" || stateStr === "resolved") {
             isResolved = true;
             displayStateAr = "تم الحل";
-            pinColor = 'green'; // 🟢
+            pinColor = 'green';
             cntRes++;
         } else if (stateStr === "3" || stateStr === "closed") {
             isResolved = true;
             displayStateAr = "مغلق";
-            pinColor = 'grey'; // ⚪ (لون مميز للمغلق)
+            pinColor = 'grey'; 
             cntRes++; 
         } else {
             isPending = true;
             displayStateAr = "قيد الانتظار";
-            pinColor = 'red'; // 🔴
+            pinColor = 'red'; 
             cntPending++;
         }
 
-        // 💡 اللوجيك الجديد: حساب وقت البلاغ عشان نحدد هو "جديد/عاجل" ولا لأ
+    
         let newBadge = "";
         let alertClass = "";
         
@@ -172,7 +163,6 @@ function distributeReports(reports) {
             }
         }
 
-        // 💡 إضافة شرط الإخفاء هنا: مش هنرسم الدبوس إلا لو البلاغ مش أرشيف، أو الزرار متفعل
         if (lat && lng && lat != 0) {
             if (!isResolved || showResolvedOnMap) {
                 const iconUrl = `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${pinColor}.png`;
@@ -194,7 +184,6 @@ function distributeReports(reports) {
             }
         }
 
-        // 💡 التعديل هنا: دمجنا كلاس السطر والبادج جوه הـ HTML
         const rowHtml = `
             <tr class="${alertClass}">
                 <td class="fw-bold text-secondary">#${id}</td>
@@ -232,7 +221,6 @@ async function openReportDetails(id) {
     const teamControl = document.getElementById('employee-only-team');     // الفريق
     const cancelBtn = document.getElementById('employee-only-cancel');     // الإلغاء / الحظر
 
-   // 💡 التعديل: إظهار زر الرفض للجميع (أدمن وموظف)
     if (isAdmin) {
         if(statusControl) statusControl.style.display = 'none';
         if(teamControl) teamControl.style.display = 'none';
@@ -240,7 +228,6 @@ async function openReportDetails(id) {
         if(statusControl) statusControl.style.display = 'block';
         if(teamControl) teamControl.style.display = 'block';
     }
-    // زرار الإلغاء والرفض بقى بيظهر دايماً لأي حد يفتح البلاغ
     if(cancelBtn) cancelBtn.style.display = 'block';
 
     document.getElementById('detailsContent').classList.add('d-none');
@@ -251,7 +238,6 @@ async function openReportDetails(id) {
         if (res.ok) {
             let details = res.data;
             
-            // 💡 عرض نوع/تصنيف البلاغ في البادج الجديد
             const type = details.reportType || details.ReportType || "غير محدد";
             const catBadge = document.getElementById('reportCategoryBadge');
             if(catBadge) {
@@ -260,7 +246,6 @@ async function openReportDetails(id) {
 
             document.getElementById('reportDesc').textContent = details.description || details.Description || 'لا يوجد وصف متاح.';
             
-            // 💡 1. جلب بيانات المُبلغ والمدينة والتاريخ والفريق
             const repName = details.reporterName || details.ReporterName || "مواطن (بدون اسم)";
             const repId = details.reporterId || details.ReporterId || "غير محدد";
             
@@ -279,7 +264,6 @@ async function openReportDetails(id) {
                 formattedDateText = d.toLocaleString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             }
 
-           // تحديث كارت المُبلغ بالتفاصيل الجديدة
             document.getElementById('reportUser').innerHTML = `
                 <div class="d-flex flex-column gap-2">
                     <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-1">
@@ -293,13 +277,11 @@ async function openReportDetails(id) {
                 </div>
             `;
 
-            // 💡 2. ملء بيانات التحليل الذكي (AI)
             const isValid = details.isValid !== undefined ? details.isValid : details.IsValid;
             const priority = details.priority || details.Priority;
             const confidence = details.confidenceScore || details.ConfidenceScore || 0;
             const recommendations = details.recommendations || details.Recommendations || "لم يصدر النظام توصيات محددة لهذه الحالة.";
 
-            // المصداقية
             const isValidBadge = document.getElementById('aiIsValid');
             if (isValidBadge) {
                 if (isValid === true) {
@@ -314,7 +296,6 @@ async function openReportDetails(id) {
                 }
             }
 
-            // الأولوية
             const priorityBadge = document.getElementById('aiPriority');
             if (priorityBadge) {
                 let pStr = String(priority).toLowerCase();
@@ -352,7 +333,6 @@ async function openReportDetails(id) {
             const recElement = document.getElementById('aiRecommendations');
             if (recElement) recElement.innerText = recommendations;
 
-            // 💡 3. حل مشكلة الصورة وعرضها من المصفوفة
             const mediaItems = details.attachedMedia || details.AttachedMedia;
             let imgPath = null;
 
@@ -361,7 +341,7 @@ async function openReportDetails(id) {
                     let fileUrl = item.fileURL || item.FileURL;
                     let mediaType = item.mediaType || item.MediaType || "";
                     if (mediaType.toLowerCase() === 'image' && fileUrl) {
-                        imgPath = fileUrl; // مسكنا الصورة
+                        imgPath = fileUrl; 
                     }
                 });
             }
@@ -375,10 +355,8 @@ async function openReportDetails(id) {
                 document.getElementById('reportImage').src = "https://cdn-icons-png.flaticon.com/512/854/854878.png";
             }
 
-            // 💡 4. استخراج وعرض الصوت من المصفوفة
             const audioContainer = document.getElementById('reportAudioContainer');
             
-            // رسالة افتراضية
             audioContainer.innerHTML = `
                 <p class="text-muted small mb-0 fw-bold">
                     <i class="fa-solid fa-microphone-slash me-2 text-secondary"></i> لا يوجد تسجيل صوتي مرفق
@@ -448,7 +426,6 @@ async function updateStatus() {
     if (statusVal === "Closed") statusInt = 3; 
 
     try {
-        // 💡 التعديل هنا: هنبعتها بكل الأسماء الممكنة عشان الـ DTO بتاعك يقبلها غصب عنه
         const payload = { 
             status: statusInt, 
             Status: statusInt,
@@ -512,12 +489,10 @@ async function updateType() {
 }
 
 // 4. إلغاء البلاغ نهائياً
-// 4. إلغاء البلاغ نهائياً
 async function cancelReport() {
     if(!confirm('هل أنت متأكد من إلغاء/رفض البلاغ نهائياً؟')) return;
     
     try {
-        // 💡 التعديل السحري: بما إن الإلغاء هو "إغلاق"، هنبعت نفس الريكويست بتاع تغيير الحالة لـ Closed (3)
         const payload = { 
             status: 3, 
             Status: 3,
@@ -527,7 +502,6 @@ async function cancelReport() {
         
         console.log("جارِ إرسال أمر الإغلاق/الإلغاء للسيرفر...");
 
-        // استخدمنا مسار تغيير الحالة (PATCH) اللي شغال ومضمون 100% بدل مسار الـ cancel
         const res = await apiRequest(`Report/${currentSelectedReportId}/status`, 'PATCH', payload);
         
         if(res.ok) { 
@@ -559,7 +533,6 @@ async function loadLookups() {
         }
     });
 
-    // 💡 التعديل هنا: جلب التصنيفات وترجمتها للعربي
     apiRequest('Report/Categories', 'GET').then(res => {
         if(res.ok) {
             let cats = res.data.$values || res.data;
@@ -584,7 +557,6 @@ async function loadLookups() {
                 const id = c.id || c.Id || c.categoryId || c.CategoryId;
                 const originalName = c.name || c.Name;
                 
-                // الجافاسكريبت هتدور في القاموس.. لو لقت الكلمة هتجيب العربي، لو ملقتهاش هتنزلها زي ما هي
                 const arabicName = categoryTranslations[originalName] || originalName;
 
                 sel.innerHTML += `<option value="${id}">${arabicName}</option>`;
@@ -606,10 +578,8 @@ function showAlert(msg, type) {
     setTimeout(() => { container.innerHTML = ''; }, 4000);
 }
 
-// 💡 دالة إظهار وإخفاء البلاغات المغلقة من على الخريطة
 function toggleArchiveMarkers() {
     showResolvedOnMap = document.getElementById('toggleArchiveMap').checked;
-    // 👈 بنعيد الرسم بناءً على البلاغات المحفوظة في المتغير الجديد
     if (currentBatchReports.length > 0) {
         distributeReports(currentBatchReports); 
     }
