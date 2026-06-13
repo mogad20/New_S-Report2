@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadLookups().then(() => {
-        loadEmployees(); // تحميل الجدول بعد ما نجيب المدن والفرق
+        loadEmployees();
     });
 });
 
@@ -10,7 +10,6 @@ let teamsMap = {};
 // 1. جلب المدن والفرق لتعبئة القوائم والترجمة في الجدول
 async function loadLookups() {
     try {
-        // المدن
         const citiesRes = await apiRequest('General/Cities', 'GET');
         const citySelect = document.getElementById('cityId');
         const filterCity = document.getElementById('filterCity');
@@ -46,7 +45,6 @@ async function loadEmployees(cityId = null) {
     const tableBody = document.getElementById('employeesTableBody');
     tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>`;
     
-    // 💡 استخدام الـ APIs: لو في مدينة بننادي مسار الفلتر، لو مفيش بننادي مسار الكل
     const endpoint = cityId ? `Employee/${cityId}/All` : 'Employee/All';
     
     try {
@@ -139,7 +137,6 @@ async function openEmployeeModal(id) {
         document.getElementById('password').required = false;
         roleContainer.classList.remove('d-none');
         
-        // 💡 استخدام مسار جلب موظف واحد
         try {
             const res = await apiRequest(`Employee/${id}`, 'GET');
             if (res && res.ok) {
@@ -195,11 +192,9 @@ document.getElementById('employeeForm').addEventListener('submit', async (e) => 
     };
 
     if (isEdit) {
-        // 💡 إضافة الحقول الخاصة بالتعديل (UpdateEmployeeDto)
         payload.employeeId = parseInt(id);
         payload.roleId = parseInt(document.getElementById('roleId').value);
     } else {
-        // 💡 إضافة الحقول الخاصة بالتسجيل (RegisterEmployeeDto)
         payload.password = document.getElementById('password').value;
     }
 
