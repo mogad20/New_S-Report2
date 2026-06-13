@@ -3,12 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const alertMessage = document.getElementById('alertMessage');
-let currentUserCityId = 0; // 💡 متغير لحفظ الـ cityId تلقائياً من السيرفر
-
+let currentUserCityId = 0; 
 // 1. دالة جلب وعرض بيانات الموظف
 async function loadMyProfile() {
     try {
-        // نكلم مسار اليوزر عشان نجيب الداتا
         const response = await apiRequest('User', 'GET');
         
         if (response && response.ok) {
@@ -23,7 +21,6 @@ async function loadMyProfile() {
             document.getElementById('email').value = userData.email || userData.Email || '';
             document.getElementById('nationalId').value = userData.nationalId || userData.NationalId || '';
             
-            // 💡 حفظ الـ cityId هنا عشان نرجعه للباك إند وقت الحفظ وميضربش في قاعدة البيانات
             currentUserCityId = userData.cityId || userData.CityId || 0;
             
             // تظبيط شكل البروفايل من فوق
@@ -53,7 +50,6 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
 
-    // 💡 التعديل هنا: أسماء الحقول طابقت السواجر بالحرف (تبدأ بحروف صغيرة) وضفنا الـ cityId
     const updatedData = {
         firstName: document.getElementById('firstName').value,
         secondName: document.getElementById('secoundName').value,
@@ -65,14 +61,12 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
     };
 
    try {
-        // نكلم مسار التعديل
         const response = await apiRequest('User/UserData', 'PUT', updatedData);
         
         if (response.ok) {
             showAlert('تم حفظ التعديلات بنجاح! ✅', 'success');
             document.getElementById('displayName').textContent = `${updatedData.firstName} ${updatedData.secondName}`;
         } else {
-            // 💡 تفكيك الأخطاء لقراءتها مباشرة
             let errorText = 'فشل في حفظ التعديلات';
             if (response.data) {
                 if (typeof response.data === 'string') {
@@ -117,7 +111,6 @@ document.getElementById('notificationToggle').addEventListener('change', async (
     }
 });
 
-// دالة لعرض الرسايل الخضراء أو الحمراء
 function showAlert(message, type) {
     alertMessage.className = `alert alert-${type} shadow-sm border-0 mb-4`;
     alertMessage.textContent = message;
