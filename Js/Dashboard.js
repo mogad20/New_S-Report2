@@ -24,12 +24,6 @@ function initMap() {
 function checkRoleAndLoad() {
     const role = localStorage.getItem('userRole') || 'Employee'; 
     isAdmin = (role === 'Admin');
-
-    if (isAdmin) {
-        document.getElementById('btnAnalytics').classList.remove('d-none');
-    }
-    
-    // 💡 التعديل هنا: حطينا كل المسميات (PageSize, pageSize, size) عشان الباك إند يلقطها غصب عنه
     // وخلينا الرقم 10000 عشان يجيب كل البلاغات وميوقفش عند 10
     const endpoint = isAdmin 
         ? 'Report/All?PageNumber=1&PageSize=100&page=1&size=100&pageSize=100&excludeResolved=false' 
