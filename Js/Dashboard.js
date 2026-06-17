@@ -564,11 +564,6 @@ async function loadLookups() {
         }
     });
 }
-
-function openAnalyticsModal() {
-    new bootstrap.Modal(document.getElementById('analyticsModal')).show();
-}
-
 function showAlert(msg, type) {
     const container = document.getElementById('alertContainer');
     container.innerHTML = `
